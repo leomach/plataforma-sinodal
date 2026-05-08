@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro - Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="card">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-primary mb-2">Criar Conta</h2>
+            <p class="text-text-muted">Junte-se à Mocidade Sinodal Garanhuns</p>
+        </div>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="space-y-1">
+                <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-text-main block">
+                    {{ field.label }}
+                </label>
+                {% if field.name == 'tipo' %}
+                    <select name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="input-field bg-white">
+                        {% for value, label in field.field.choices %}
+                            <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <input type="{{ field.field.widget.input_type|default:'text' }}" 
+                           name="{{ field.html_name }}" 
+                           id="{{ field.id_for_label }}"
+                           class="input-field"
+                           {% if field.value %}value="{{ field.value }}"{% endif %}>
+                {% endif %}
+                {% if field.errors %}
+                    <p class="text-secondary text-xs mt-1">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-primary w-full py-3 mt-6">
+                Concluir Cadastro
+            </button>
+        </form>
+        
+        <div class="mt-8 pt-6 border-t border-border text-center">
+            <p class="text-sm text-text-muted">
+                Já possui acesso? 
+                <a href="{% url 'login' %}" class="text-primary font-bold hover:underline ml-1">Entre aqui</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

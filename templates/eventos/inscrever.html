@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Inscrição: {{ evento.titulo }} - Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-10">
+        <h1 class="text-3xl font-bold text-primary mb-2">Inscrição no Evento</h1>
+        <p class="text-text-muted">Preencha os dados abaixo para confirmar sua participação em <span class="font-bold text-text-main">{{ evento.titulo }}</span>.</p>
+    </div>
+
+    <form method="post" class="space-y-8">
+        {% csrf_token %}
+        
+        <!-- Dados Básicos da Inscrição -->
+        <div class="card">
+            <h3 class="text-xl font-bold text-text-main mb-6 flex items-center gap-2 border-b border-border pb-4">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                Dados da Participação
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1">
+                    <label for="{{ form.papel_evento.id_for_label }}" class="text-sm font-bold text-text-main block">{{ form.papel_evento.label }}</label>
+                    {{ form.papel_evento }}
+                    {% if form.papel_evento.errors %}<p class="text-secondary text-xs">{{ form.papel_evento.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="space-y-1" id="credential-field">
+                    <label for="{{ form.credential_url.id_for_label }}" class="text-sm font-bold text-text-main block">{{ form.credential_url.label }}</label>
+                    {{ form.credential_url }}
+                    <p class="text-[10px] text-text-muted leading-tight mt-1">Link do Google Drive com a foto/PDF da credencial assinada.</p>
+                    {% if form.credential_url.errors %}<p class="text-secondary text-xs">{{ form.credential_url.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="space-y-1 md:col-span-2">
+                    <label for="{{ form.observacoes.id_for_label }}" class="text-sm font-bold text-text-main block">{{ form.observacoes.label }}</label>
+                    {{ form.observacoes }}
+                    {% if form.observacoes.errors %}<p class="text-secondary text-xs">{{ form.observacoes.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Campos Personalizados -->
+        {% if form.campos_personalizados %}
+        <div class="card">
+            <h3 class="text-xl font-bold text-text-main mb-6 flex items-center gap-2 border-b border-border pb-4">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                Informações Adicionais
+            </h3>
+            
+            <div class="grid grid-cols-1 gap-8">
+                {% for field in form %}
+                    {% if field.name != 'papel_evento' and field.name != 'credential_url' and field.name != 'observacoes' %}
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-text-main block">
+                            {{ field.label }} {% if field.field.required %}<span class="text-secondary">*</span>{% endif %}
+                        </label>
+                        
+                        {% if "checkbox" in field.field.widget.attrs.class or "space-y-2" in field.field.widget.attrs.class %}
+                            <div class="bg-slate-50 p-4 rounded-lg border border-border">
+                                {{ field }}
+                            </div>
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
+
+                        {% if field.errors %}<p class="text-secondary text-xs">{{ field.errors.0 }}</p>{% endif %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="flex items-center justify-between pt-6 border-t border-border">
+            <a href="{% url 'detalhe_evento' evento.slug %}" class="text-text-muted hover:text-text-main font-semibold transition-colors">Cancelar</a>
+            <button type="submit" class="btn-primary px-10 py-3 shadow-lg shadow-primary/30">Confirmar Inscrição</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const papelSelect = document.getElementById('{{ form.papel_evento.id_for_label }}');
+    const credentialField = document.getElementById('credential-field');
+    
+    function toggleCredential() {
+        // PAPEL_DELEGADO = 1, PAPEL_EX_OFFICIO = 2
+        if (papelSelect && (papelSelect.value == "1" || papelSelect.value == "2")) {
+            credentialField.style.display = 'block';
+        } else if (credentialField) {
+            credentialField.style.display = 'none';
+        }
+    }
+    
+    if (papelSelect) {
+        papelSelect.addEventListener('change', toggleCredential);
+        toggleCredential();
+    }
+</script>
+
+<style>
+    /* Estilização manual para garantir que apareça se o layer não carregar */
+    .input-field {
+        @apply w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all bg-white;
+    }
+    textarea.input-field { @apply resize-none; }
+    
+    /* Estilo para listas de checkboxes */
+    ul[id^="id_custom_"] { @apply space-y-2; }
+    ul[id^="id_custom_"] li { @apply flex items-center gap-2 text-sm text-text-main; }
+    ul[id^="id_custom_"] input[type="checkbox"] { @apply w-4 h-4 text-primary rounded border-border focus:ring-primary; }
+</style>
+{% endblock %}

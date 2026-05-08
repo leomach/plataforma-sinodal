@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-12">
+    <div class="card bg-white p-8 rounded-lg shadow-md border border-border">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-primary mb-2">Bem-vindo</h2>
+            <p class="text-text-muted">Acesse sua conta para continuar</p>
+        </div>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="space-y-1">
+                <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-text-main block">
+                    {{ field.label }}
+                </label>
+                <input type="{{ field.field.widget.input_type|default:'text' }}" 
+                       name="{{ field.html_name }}" 
+                       id="{{ field.id_for_label }}"
+                       class="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                       {% if field.value %}value="{{ field.value }}"{% endif %}>
+                {% if field.errors %}
+                    <p class="text-secondary text-xs mt-1">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="w-full bg-primary text-white py-3 rounded-md font-medium transition-all hover:brightness-90 active:scale-95 shadow-sm">
+                Entrar no Sistema
+            </button>
+        </form>
+        
+        <div class="mt-8 pt-6 border-t border-border text-center">
+            <p class="text-sm text-text-muted">
+                Não tem uma conta? 
+                <a href="{% url 'register' %}" class="text-primary font-bold hover:underline ml-1">Cadastre-se</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

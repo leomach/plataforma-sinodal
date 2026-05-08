@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Configurar Formulário: {{ evento.titulo }} - Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+            <a href="{% url 'gerenciar_eventos' %}" class="text-primary text-sm font-bold flex items-center gap-1 mb-4 hover:underline">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Voltar para Painel
+            </a>
+            <h2 class="text-3xl font-bold text-text-main">Configurar Perguntas</h2>
+            <p class="text-text-muted">Monte o questionário de inscrição para <span class="font-bold text-text-main">{{ evento.titulo }}</span>.</p>
+        </div>
+        
+        <button type="button" id="add-form" class="btn-primary flex items-center gap-2 bg-tertiary shadow-lg shadow-tertiary/20">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            Adicionar Pergunta
+        </button>
+    </div>
+
+    <form method="post" id="form-container" class="space-y-6">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        
+        <div id="formset-container" class="space-y-4">
+            {% for form in formset %}
+            <div class="question-form card relative group bg-white border-border hover:border-primary/30 transition-all">
+                <!-- Botão de Remover (Escondido visualmente, mas aciona o DELETE do FormSet) -->
+                <div class="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    {% if formset.can_delete %}
+                        <div class="hidden">{{ form.DELETE }}</div>
+                        <button type="button" onclick="removeQuestion(this)" class="bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {% for hidden in form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+                    
+                    <div class="md:col-span-2 space-y-1">
+                        <label class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Pergunta</label>
+                        {{ form.label }}
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Tipo de Resposta</label>
+                        {{ form.tipo_campo }}
+                    </div>
+
+                    <div class="flex items-center justify-center pt-6">
+                        <div class="flex items-center gap-2">
+                            {{ form.obrigatorio }}
+                            <label class="text-xs font-bold text-text-main uppercase">Obrigatório</label>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-4 space-y-1">
+                        <label class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Opções (Apenas para Seleção - Separe por vírgula)</label>
+                        {{ form.opcoes }}
+                    </div>
+                </div>
+                {% if form.errors %}
+                <div class="mt-4 p-2 bg-secondary/5 rounded border border-secondary/20 text-xs text-secondary">
+                    {{ form.errors }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Template para novas perguntas -->
+        <div id="empty-form" class="hidden">
+            <div class="question-form card relative group bg-white border-dashed border-2 border-primary/20 hover:border-primary/50 transition-all">
+                <div class="absolute -top-3 -right-3 z-10">
+                    <button type="button" onclick="removeQuestion(this, true)" class="bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {% for hidden in formset.empty_form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+                    <div class="md:col-span-2 space-y-1">{{ formset.empty_form.label }}</div>
+                    <div class="space-y-1">{{ formset.empty_form.tipo_campo }}</div>
+                    <div class="flex items-center justify-center pt-6">
+                        <div class="flex items-center gap-2">
+                            {{ formset.empty_form.obrigatorio }}
+                            <label class="text-xs font-bold text-text-main uppercase">Obrigatório</label>
+                        </div>
+                    </div>
+                    <div class="md:col-span-4 space-y-1">{{ formset.empty_form.opcoes }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-8 border-t border-border">
+            <button type="button" onclick="window.location.reload()" class="btn-outline">Resetar Alterações</button>
+            <div class="flex gap-3">
+                <a href="{% url 'gerenciar_eventos' %}" class="btn-outline">Cancelar</a>
+                <button type="submit" class="btn-primary px-10 shadow-lg shadow-primary/30">Salvar Formulário</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    const addFormBtn = document.getElementById('add-form');
+    const totalForms = document.getElementById('id_campos_personalizados-TOTAL_FORMS');
+    const container = document.getElementById('formset-container');
+    const emptyFormHtml = document.getElementById('empty-form').innerHTML;
+
+    addFormBtn.addEventListener('click', () => {
+        const currentCount = parseInt(totalForms.value);
+        const newForm = document.createElement('div');
+        newForm.innerHTML = emptyFormHtml.replace(/__prefix__/g, currentCount);
+        container.appendChild(newForm.firstElementChild);
+        totalForms.setAttribute('value', currentCount + 1);
+        newForm.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    function removeQuestion(btn, isNew = false) {
+        const card = btn.closest('.question-form');
+        if (isNew) {
+            card.remove();
+            // Opcional: decrementar TOTAL_FORMS se for a última, mas o Django lida bem com gaps
+        } else {
+            // Para perguntas existentes, marcamos o checkbox de DELETE e escondemos o card
+            const deleteCheckbox = card.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (deleteCheckbox) {
+                deleteCheckbox.checked = true;
+                card.classList.add('opacity-30', 'pointer-events-none', 'grayscale');
+                card.style.display = 'none'; // Podemos esconder ou apenas desativar
+            }
+        }
+    }
+</script>
+
+<style>
+    input[type="checkbox"] { @apply w-4 h-4 text-primary rounded border-border focus:ring-primary; }
+</style>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Eventos - Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+            <h2 class="text-3xl font-bold text-primary">Painel de Eventos</h2>
+            <p class="text-text-muted text-sm mt-1">Gerencie a criação de eventos e valide as inscrições.</p>
+        </div>
+        <a href="{% url 'criar_evento' %}" class="btn-primary flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            Novo Evento
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6">
+        {% for evento in eventos %}
+        <div class="card flex flex-col md:flex-row items-center gap-6 group hover:border-primary/30 transition-all">
+            <div class="w-full md:w-48 h-32 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+                {% if evento.banner %}
+                    <img src="{{ evento.banner.url }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-primary/20 font-bold italic text-2xl">UMP</div>
+                {% endif %}
+            </div>
+            
+            <div class="flex-grow space-y-2">
+                <div class="flex items-center gap-3">
+                    <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest">{{ evento.get_categoria_display }}</span>
+                    {% if evento.ativo %}<span class="text-tertiary text-[10px] font-bold uppercase tracking-widest">● Ativo</span>{% else %}<span class="text-text-muted text-[10px] font-bold uppercase tracking-widest">○ Inativo</span>{% endif %}
+                </div>
+                <h3 class="text-xl font-bold text-text-main group-hover:text-primary transition-colors">{{ evento.titulo }}</h3>
+                <p class="text-sm text-text-muted">{{ evento.data_inicio|date:"d/m/Y" }} em {{ evento.local }}</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <div class="flex flex-col gap-2">
+                    <a href="{% url 'gerenciar_inscricoes' evento.slug %}" class="btn-primary text-sm py-2 px-6 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        Inscrições
+                        <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">{{ evento.inscritos.count }}</span>
+                    </a>
+                    <a href="{% url 'gerenciar_campos_evento' evento.slug %}" class="text-primary text-[10px] font-bold uppercase tracking-widest text-center hover:underline">
+                        ⚙️ Configurar Formulário
+                    </a>
+                </div>
+                <a href="{% url 'editar_evento' evento.slug %}" class="btn-outline text-sm py-2 px-4 flex items-center justify-center">Editar</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card p-12 text-center border-dashed">
+            <p class="text-text-muted">Nenhum evento cadastrado.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'gerenciar_eventos' %}" class="text-primary text-sm font-bold flex items-center gap-1 mb-4 hover:underline">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Voltar para Painel
+        </a>
+        <h2 class="text-3xl font-bold text-text-main">{{ titulo }}</h2>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        <div class="card space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Título -->
+                <div class="md:col-span-2 space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.titulo.label }}</label>
+                    <input type="text" name="titulo" value="{{ form.titulo.value|default:'' }}" class="input-field" required>
+                    {% if form.titulo.errors %}<p class="text-secondary text-xs">{{ form.titulo.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Categoria -->
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.categoria.label }}</label>
+                    <select name="categoria" class="input-field bg-white">
+                        {% for val, label in form.categoria.field.choices %}
+                            <option value="{{ val }}" {% if form.categoria.value|stringformat:"s" == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Local -->
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.local.label }}</label>
+                    <input type="text" name="local" value="{{ form.local.value|default:'' }}" class="input-field" required>
+                </div>
+
+                <!-- Datas -->
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.data_inicio.label }}</label>
+                    {{ form.data_inicio }}
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.data_fim.label }}</label>
+                    {{ form.data_fim }}
+                </div>
+
+                <!-- Banner -->
+                <div class="md:col-span-2 space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.banner.label }}</label>
+                    <div class="flex items-center gap-4">
+                        {% if evento.banner %}
+                            <img src="{{ evento.banner.url }}" class="w-20 h-20 object-cover rounded-lg border border-border">
+                        {% endif %}
+                        <input type="file" name="banner" class="text-sm text-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20">
+                    </div>
+                </div>
+
+                <!-- Descrição -->
+                <div class="md:col-span-2 space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.descricao.label }}</label>
+                    {{ form.descricao }}
+                </div>
+
+                <!-- Status Ativo -->
+                <div class="md:col-span-2 flex items-center gap-2">
+                    <input type="checkbox" name="ativo" id="id_ativo" {% if form.ativo.value %}checked{% endif %} class="w-4 h-4 text-primary rounded border-border focus:ring-primary">
+                    <label for="id_ativo" class="text-sm font-bold text-text-main">Evento Ativo (visível para os sócios)</label>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-border flex justify-end gap-3">
+                <a href="{% url 'gerenciar_eventos' %}" class="btn-outline">Cancelar</a>
+                <button type="submit" class="btn-primary">Salvar Evento</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
