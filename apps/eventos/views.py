@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.utils import timezone
+from django.db import transaction
 from .models import Evento, Inscricao, CampoEvento, RespostaInscricao, Sessao, Presenca
 from .forms import InscricaoForm, EventoForm, CampoEventoFormSet
 from core import constants
@@ -18,18 +20,38 @@ def detalhe_evento(request, slug):
     if request.user.is_authenticated:
         inscricao = Inscricao.objects.filter(usuario=request.user, evento=evento).first()
     
+    agora = timezone.now()
+    pre_inscricao = False
+    if evento.inscricoes_inicio and agora < evento.inscricoes_inicio:
+        pre_inscricao = True
+
     return render(request, 'eventos/detalhe.html', {
         'evento': evento,
         'inscricao': inscricao,
-        'ja_inscrito': inscricao is not None
+        'ja_inscrito': inscricao is not None,
+        'pre_inscricao': pre_inscricao
     })
 
 @login_required
+@transaction.atomic
 def inscrever_evento(request, slug):
-    evento = get_object_or_404(Evento, slug=slug, ativo=True)
+    # Usamos select_for_update para travar o registro do evento no banco até o fim da transação
+    # Isso impede que dois processos contem as vagas simultaneamente e causem overbook.
+    evento = get_object_or_404(Evento.objects.select_for_update(), slug=slug, ativo=True)
     
+    # 1. Verifica se já está inscrito
     if Inscricao.objects.filter(usuario=request.user, evento=evento).exists():
         messages.warning(request, 'Você já está inscrito neste evento.')
+        return redirect('detalhe_evento', slug=slug)
+
+    # 2. Verifica período de inscrição
+    if not evento.periodo_inscricao_aberto:
+        messages.error(request, 'O período de inscrições para este evento não está aberto.')
+        return redirect('detalhe_evento', slug=slug)
+
+    # 3. Verifica se há vagas
+    if evento.esgotado:
+        messages.error(request, 'Desculpe, as vagas para este evento acabaram.')
         return redirect('detalhe_evento', slug=slug)
 
     if request.method == 'POST':
@@ -140,7 +162,6 @@ def hub_evento(request, slug):
         messages.error(request, 'Você precisa ter sua inscrição aprovada para acessar o Hub.')
         return redirect('detalhe_evento', slug=slug)
     
-    # Filtra documentos conforme o papel do usuário
     documentos = evento.documentos.all()
     if inscricao.papel_evento not in [constants.PAPEL_DELEGADO, constants.PAPEL_EX_OFFICIO]:
         documentos = documentos.filter(restrito_delegados=False)

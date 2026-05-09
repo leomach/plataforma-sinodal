@@ -1,20 +1,49 @@
 from django import forms
 from django.forms import inlineformset_factory
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from .models import Evento, CampoEvento, Inscricao, RespostaInscricao
 from core import constants
 
 class EventoForm(forms.ModelForm):
     class Meta:
         model = Evento
-        fields = ['titulo', 'descricao', 'categoria', 'data_inicio', 'data_fim', 'local', 'banner', 'ativo']
+        fields = [
+            'titulo', 'descricao', 'categoria', 'data_inicio', 'data_fim', 
+            'inscricoes_inicio', 'inscricoes_fim', 'local', 'banner', 'vagas', 'ativo'
+        ]
         widgets = {
             'titulo': forms.TextInput(attrs={'class': 'input-field'}),
             'categoria': forms.Select(attrs={'class': 'input-field bg-white'}),
             'local': forms.TextInput(attrs={'class': 'input-field'}),
             'data_inicio': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'input-field'}),
             'data_fim': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'input-field'}),
+            'inscricoes_inicio': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'input-field'}),
+            'inscricoes_fim': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'input-field'}),
+            'vagas': forms.NumberInput(attrs={'class': 'input-field', 'min': 0}),
             'descricao': forms.Textarea(attrs={'rows': 5, 'class': 'input-field'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        data_inicio = cleaned_data.get('data_inicio')
+        data_fim = cleaned_data.get('data_fim')
+        insc_inicio = cleaned_data.get('inscricoes_inicio')
+        insc_fim = cleaned_data.get('inscricoes_fim')
+
+        # 1. Validação do Período do Evento
+        if data_inicio and data_fim and data_fim < data_inicio:
+            raise ValidationError({'data_fim': "A data de término não pode ser anterior à data de início."})
+
+        # 2. Validação do Período de Inscrição
+        if insc_inicio and insc_fim and insc_fim < insc_inicio:
+            raise ValidationError({'inscricoes_fim': "O fim das inscrições não pode ser anterior ao início."})
+        
+        # 3. Inscrições não podem terminar depois que o evento acaba
+        if insc_fim and data_fim and insc_fim > data_fim:
+            raise ValidationError({'inscricoes_fim': "O período de inscrição não pode ultrapassar o término do evento."})
+
+        return cleaned_data
 
 class CampoEventoForm(forms.ModelForm):
     class Meta:
@@ -91,7 +120,6 @@ class InscricaoForm(forms.ModelForm):
             field_key = f'custom_{campo.id}'
             valor = self.cleaned_data.get(field_key)
             if valor is not None:
-                # Se for MultipleChoiceField, valor é uma lista
                 if isinstance(valor, list):
                     valor = ", ".join(valor)
                 RespostaInscricao.objects.create(

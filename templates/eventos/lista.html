@@ -35,7 +35,14 @@
             {% endif %}
 
             <div class="p-6 flex-grow flex flex-col">
-                <h3 class="text-xl font-bold text-text-main mb-2 leading-tight group-hover:text-primary transition-colors">{{ evento.titulo }}</h3>
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold text-text-main leading-tight group-hover:text-primary transition-colors">{{ evento.titulo }}</h3>
+                    {% if evento.vagas > 0 %}
+                        <span class="shrink-0 text-[10px] font-bold {% if evento.esgotado %} text-secondary {% else %} text-tertiary {% endif %} uppercase tracking-tighter">
+                            {% if evento.esgotado %} Esgotado {% else %} {{ evento.vagas_disponiveis }} Vagas {% endif %}
+                        </span>
+                    {% endif %}
+                </div>
                 
                 <div class="space-y-2 mb-6 flex-grow">
                     <div class="flex items-center gap-2 text-sm text-text-muted">

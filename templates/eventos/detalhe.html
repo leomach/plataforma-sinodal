@@ -19,11 +19,21 @@
         <!-- Detalhes e Inscrição -->
         <div class="lg:col-span-2 space-y-8">
             <div class="card">
-                <div class="flex items-center gap-3 mb-6">
+                <div class="flex flex-wrap items-center gap-3 mb-6">
                     <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
                         {{ evento.get_categoria_display }}
                     </span>
-                    <span class="text-text-muted text-sm">• Criado em {{ evento.criado_em|date:"d/m/Y" }}</span>
+                    {% if evento.vagas > 0 %}
+                        <span class="{% if evento.esgotado %} bg-secondary/10 text-secondary {% else %} bg-tertiary/10 text-tertiary {% endif %} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                            {% if evento.esgotado %} Esgotado {% else %} {{ evento.vagas_disponiveis }} Vagas Restantes {% endif %}
+                        </span>
+                    {% endif %}
+                    
+                    {% if not evento.periodo_inscricao_aberto and not ja_inscrito %}
+                        <span class="bg-secondary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                            Inscrições Fechadas
+                        </span>
+                    {% endif %}
                 </div>
                 
                 <h1 class="text-4xl font-bold text-text-main mb-6 leading-tight">{{ evento.titulo }}</h1>
@@ -67,21 +77,16 @@
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                             </div>
                             <p class="font-bold">Inscrição Aprovada!</p>
-                            <p class="text-[10px] uppercase tracking-widest mt-1 opacity-80">{{ inscricao.get_papel_evento_display }}</p>
                         </div>
-                        
-                        <!-- BOTÃO DE ACESSO AO HUB (Destaque) -->
-                        <a href="{% url 'hub_evento' evento.slug %}" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-tertiary/20 bg-tertiary hover:brightness-110 mb-4 animate-bounce-slow">
+                        <a href="{% url 'hub_evento' evento.slug %}" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-tertiary/20 bg-tertiary hover:brightness-110 mb-4">
                             Acessar Hub do Evento
                         </a>
-                        
                     {% elif inscricao.status == 3 %}
                         <div class="bg-secondary/10 text-secondary p-6 rounded-2xl text-center mb-6 border border-secondary/20">
                             <div class="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                             </div>
                             <p class="font-bold">Inscrição Rejeitada</p>
-                            <p class="text-xs mt-1 opacity-80">Entre em contato com a organização.</p>
                         </div>
                     {% else %}
                         <div class="bg-yellow-50 text-yellow-600 p-6 rounded-2xl text-center mb-6 border border-yellow-200">
@@ -89,26 +94,44 @@
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             </div>
                             <p class="font-bold">Inscrição Pendente</p>
-                            <p class="text-xs mt-1 opacity-80">Aguardando validação da liderança.</p>
                         </div>
                     {% endif %}
                     <a href="{% url 'perfil' %}" class="btn-outline w-full text-center block py-3">Ver Minhas Inscrições</a>
                 {% else %}
-                    <p class="text-text-muted text-sm mb-6 leading-relaxed">As inscrições estão abertas! Escolha o seu papel e participe deste momento da Sinodal.</p>
-                    <a href="{% url 'inscrever_evento' evento.slug %}" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02]">
-                        Inscrever-me Agora
-                    </a>
+                    {% if pre_inscricao %}
+                        <div class="bg-blue-50 text-primary p-6 rounded-2xl text-center mb-6 border border-blue-200">
+                            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 text-primary">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                            <p class="font-bold">Em Breve!</p>
+                            <p class="text-xs mt-1 opacity-80">Inscrições abrem em: <br> <strong>{{ evento.inscricoes_inicio|date:"d/m/Y H:i" }}</strong></p>
+                        </div>
+                        <button disabled class="bg-slate-200 text-slate-400 w-full py-4 rounded-md font-bold cursor-not-allowed uppercase text-sm tracking-widest">
+                            Aguardando Abertura
+                        </button>
+                    {% elif not evento.periodo_inscricao_aberto or evento.esgotado %}
+                        <div class="bg-secondary/10 text-secondary p-6 rounded-2xl text-center mb-6 border border-secondary/20">
+                            <div class="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                            <p class="font-bold uppercase tracking-widest text-sm">Inscrições Encerradas</p>
+                        </div>
+                        <button disabled class="bg-slate-300 text-slate-500 w-full py-4 rounded-md font-bold cursor-not-allowed">
+                            Indisponível
+                        </button>
+                    {% else %}
+                        <p class="text-text-muted text-sm mb-6 leading-relaxed">As inscrições estão abertas! Participe deste momento da Sinodal.</p>
+                        <div class="bg-slate-50 p-3 rounded-lg mb-6 border border-border text-center">
+                            <p class="text-[10px] font-bold text-text-muted uppercase tracking-tighter mb-1 text-center">Prazo Final</p>
+                            <p class="text-xs font-bold text-secondary">{{ evento.inscricoes_fim|date:"d/m/Y \à\s H:i"|default:"Até esgotar" }}</p>
+                        </div>
+                        <a href="{% url 'inscrever_evento' evento.slug %}" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02]">
+                            Inscrever-me Agora
+                        </a>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    @keyframes bounce-slow {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-4px); }
-    }
-    .animate-bounce-slow { animation: bounce-slow 3s infinite ease-in-out; }
-</style>
 {% endblock %}
