@@ -42,7 +42,7 @@
             h1, h2, h3, .serif-title { @apply font-serif; }
         }
         @layer components {
-            .btn-primary { @apply bg-primary text-white px-6 py-2 rounded-md font-medium transition-all hover:brightness-90 active:scale-95 shadow-sm; }
+            .btn-primary { @apply bg-primary text-white px-6 py-2 rounded-md font-medium transition-all hover:brightness-90 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed; }
             .btn-outline { @apply border border-border text-text-main px-6 py-2 rounded-md font-medium transition-all hover:bg-slate-50 active:scale-95; }
             .card { @apply bg-surface border border-border rounded-lg shadow-sm p-6; }
             .input-field { @apply w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all; }
@@ -52,9 +52,27 @@
     </style>
 
     {% block extra_head %}{% endblock %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="min-h-screen flex flex-col bg-background text-text-main font-sans">
     
+    <!-- Modal de Corte de Imagem -->
+    <div id="crop-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-surface w-full max-w-2xl rounded-xl overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-border flex justify-between items-center">
+                <h3 class="font-bold text-lg">Ajustar Imagem</h3>
+                <button type="button" onclick="closeCropModal()" class="text-text-muted hover:text-text-main text-2xl">&times;</button>
+            </div>
+            <div class="p-4 bg-slate-900 flex items-center justify-center overflow-hidden h-[300px] md:h-[450px]">
+                <img id="crop-image" src="" class="max-w-full max-h-full block">
+            </div>
+            <div class="p-4 border-t border-border flex justify-end gap-3">
+                <button type="button" onclick="closeCropModal()" class="btn-outline">Cancelar</button>
+                <button type="button" id="crop-confirm" class="btn-primary">Confirmar e Cortar</button>
+            </div>
+        </div>
+    </div>
+
     <header class="bg-primary text-white shadow-lg sticky top-0 z-50">
         <nav class="container mx-auto px-4">
             <div class="flex justify-between items-center h-20">
@@ -200,6 +218,9 @@
     </footer>
 
     <script src="{% static 'js/htmx.min.js' %}" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
+    <script src="{% static 'js/image-upload.js' %}"></script>
     <script>
         // Mobile menu toggle
         const btn = document.getElementById('mobile-menu-button');

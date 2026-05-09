@@ -4,8 +4,10 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from core import constants
+from core.mixins import ImageCleanupMixin
 
-class Evento(models.Model):
+class Evento(ImageCleanupMixin, models.Model):
+    image_fields = ['banner']
     titulo = models.CharField(_('Título'), max_length=200)
     slug = models.SlugField(_('Slug'), unique=True, blank=True)
     descricao = models.TextField(_('Descrição'))

@@ -16,8 +16,10 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
+    'cloudinary',
     'django_htmx',
     'apps.eventos',
     'apps.usuarios',
@@ -82,10 +84,27 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Cloudinary Configuration
+CLOUDINARY_STORAGE = {}
+if os.getenv('CLOUDINARY_CLOUD_NAME'):
+    CLOUDINARY_STORAGE['CLOUD_NAME'] = os.getenv('CLOUDINARY_CLOUD_NAME')
+if os.getenv('CLOUDINARY_API_KEY'):
+    CLOUDINARY_STORAGE['API_KEY'] = os.getenv('CLOUDINARY_API_KEY')
+if os.getenv('CLOUDINARY_API_SECRET'):
+    CLOUDINARY_STORAGE['API_SECRET'] = os.getenv('CLOUDINARY_API_SECRET')
+if os.getenv('CLOUDINARY_URL'):
+    CLOUDINARY_STORAGE['CLOUDINARY_URL'] = os.getenv('CLOUDINARY_URL')
+
 STORAGES = {
     "default": { "BACKEND": "django.core.files.storage.FileSystemStorage" },
     "staticfiles": { "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage" },
 }
+
+# Use Cloudinary for Media if any config is present
+if os.getenv('CLOUDINARY_CLOUD_NAME') or os.getenv('CLOUDINARY_URL'):
+    storage_backend = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    STORAGES["default"] = { "BACKEND": storage_backend }
+    DEFAULT_FILE_STORAGE = storage_backend # Fallback for older apps
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'

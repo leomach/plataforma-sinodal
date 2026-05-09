@@ -1,22 +1,33 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Meu Perfil - Plataforma Sinodal{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
+<div class="max-w-6xl mx-auto overflow-hidden">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Sidebar do Perfil -->
-        <div class="space-y-6">
+        <div class="space-y-6 min-w-0">
             <div class="card flex flex-col items-center text-center py-10">
-                <div class="relative group">
-                    <div class="w-32 h-32 bg-gradient-to-tr from-primary to-blue-400 rounded-full flex items-center justify-center text-white text-5xl font-bold shadow-xl">
-                        {{ user.short_name|slice:":1" }}
+                <div class="relative group cursor-pointer" onclick="document.getElementById('id_foto').click()" title="Clique para alterar sua foto">
+                    <div id="avatar-preview" class="w-32 h-32 rounded-full flex items-center justify-center text-white text-5xl font-bold shadow-xl overflow-hidden bg-gradient-to-tr from-primary to-blue-400">
+                        {% if user.foto %}
+                            <img src="{{ user.foto.url }}" alt="{{ user.short_name }}" class="w-full h-full object-cover">
+                        {% else %}
+                            {{ user.short_name|slice:":1" }}
+                        {% endif %}
+                    </div>
+                    <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                     </div>
                 </div>
                 
-                <div class="mt-6">
-                    <h2 class="text-2xl font-bold text-text-main">{{ user.short_name }}</h2>
-                    <p class="text-text-muted text-sm italic">@{{ user.username }}</p>
+                <div class="mt-6 w-full px-4">
+                    <h2 class="text-2xl font-bold text-text-main truncate">{{ user.short_name }}</h2>
+                    <p class="text-text-muted text-sm italic truncate">@{{ user.username }}</p>
                     <div class="mt-3">
                         <span class="inline-flex items-center px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest
                             {% if user.tipo == 2 %} bg-tertiary/10 text-tertiary {% else %} bg-secondary/10 text-secondary {% endif %}">
@@ -38,29 +49,39 @@
         </div>
 
         <!-- Conteúdo Principal -->
-        <div class="lg:col-span-2 space-y-8">
+        <div class="lg:col-span-2 space-y-8 min-w-0">
             <!-- Navegação Interna -->
-            <div class="flex gap-4 border-b border-border pb-1">
-                <button onclick="switchTab('dados')" id="tab-dados" class="pb-3 px-2 text-sm font-bold border-b-2 border-primary text-primary transition-all">Meus Dados</button>
-                <button onclick="switchTab('eventos')" id="tab-eventos" class="pb-3 px-2 text-sm font-bold border-b-2 border-transparent text-text-muted hover:text-text-main transition-all">Meus Eventos</button>
+            <div class="flex gap-4 border-b border-border pb-1 overflow-x-auto no-scrollbar">
+                <button onclick="switchTab('dados')" id="tab-dados" class="pb-3 px-2 text-sm font-bold border-b-2 border-primary text-primary transition-all whitespace-nowrap">Meus Dados</button>
+                <button onclick="switchTab('eventos')" id="tab-eventos" class="pb-3 px-2 text-sm font-bold border-b-2 border-transparent text-text-muted hover:text-text-main transition-all whitespace-nowrap">Meus Eventos</button>
             </div>
 
             <!-- Aba: Meus Dados -->
             <div id="content-dados" class="space-y-6">
-                <div class="card">
-                    <form method="post" class="space-y-6">
+                <div class="card overflow-hidden">
+                    <form method="post" enctype="multipart/form-data" class="space-y-6">
                         {% csrf_token %}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {% for field in form %}
-                            <div class="space-y-1 {% if field.name == 'bio' %}md:col-span-2{% endif %}">
-                                <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-text-main block">{{ field.label }}</label>
-                                {% if field.name == 'bio' %}{{ field }}{% else %}<input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="input-field" {% if field.value %}value="{{ field.value }}"{% endif %}>{% endif %}
-                                {% if field.errors %}<p class="text-secondary text-xs mt-1">{{ field.errors.0 }}</p>{% endif %}
-                            </div>
+                                {% if field.name == 'foto' %}
+                                    <div class="hidden">{{ field }}</div>
+                                {% else %}
+                                    <div class="space-y-1 {% if field.name == 'bio' %}md:col-span-2{% endif %} min-w-0">
+                                        <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-text-main block">{{ field.label }}</label>
+                                        <div class="w-full overflow-hidden">
+                                            {% if field.name == 'bio' %}
+                                                {{ field }}
+                                            {% else %}
+                                                <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="input-field w-full" {% if field.value %}value="{{ field.value }}"{% endif %}>
+                                            {% endif %}
+                                        </div>
+                                        {% if field.errors %}<p class="text-secondary text-xs mt-1">{{ field.errors.0 }}</p>{% endif %}
+                                    </div>
+                                {% endif %}
                             {% endfor %}
                         </div>
                         <div class="pt-6 border-t border-border flex justify-end">
-                            <button type="submit" class="btn-primary">Salvar Alterações</button>
+                            <button type="submit" class="btn-primary w-full sm:w-auto">Salvar Alterações</button>
                         </div>
                     </form>
                 </div>
@@ -69,22 +90,22 @@
             <!-- Aba: Meus Eventos -->
             <div id="content-eventos" class="hidden space-y-4">
                 {% for inscricao in inscricoes %}
-                <div class="card flex items-center justify-between group hover:border-primary/30 transition-all">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center text-primary border border-border group-hover:bg-primary/5">
+                <div class="card flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 transition-all min-w-0">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="flex-shrink-0 w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center text-primary border border-border group-hover:bg-primary/5">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-text-main group-hover:text-primary transition-colors">{{ inscricao.evento.titulo }}</h4>
-                            <p class="text-[10px] text-text-muted uppercase font-bold tracking-widest">{{ inscricao.get_papel_evento_display }}</p>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-text-main group-hover:text-primary transition-colors truncate">{{ inscricao.evento.titulo }}</h4>
+                            <p class="text-[10px] text-text-muted uppercase font-bold tracking-widest truncate">{{ inscricao.get_papel_evento_display }}</p>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest
+                    <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-border flex-shrink-0">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap
                             {% if inscricao.status == 2 %} bg-tertiary/10 text-tertiary {% elif inscricao.status == 3 %} bg-secondary/10 text-secondary {% else %} bg-yellow-100 text-yellow-600 {% endif %}">
                             {{ inscricao.get_status_display }}
                         </span>
-                        <p class="text-[10px] text-text-muted mt-2">{{ inscricao.data_inscricao|date:"d/m/Y" }}</p>
+                        <p class="text-[10px] text-text-muted">{{ inscricao.data_inscricao|date:"d/m/Y" }}</p>
                     </div>
                 </div>
                 {% empty %}
@@ -123,6 +144,17 @@
 </script>
 
 <style>
-    textarea { @apply input-field resize-none; }
+    textarea { @apply w-full input-field resize-none block max-w-full !important; }
+    input { @apply max-w-full !important; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setupImageUpload('id_foto', 'avatar-preview', 1, true);
+    });
+</script>
 {% endblock %}

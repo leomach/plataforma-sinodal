@@ -76,10 +76,14 @@ def perfil(request):
     inscricoes = Inscricao.objects.filter(usuario=request.user).order_by('-data_inscricao')
     
     if request.method == 'POST':
-        form = ProfileUpdateForm(request.POST, instance=request.user)
+        print("FILES received:", request.FILES)
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
+            print("Form is valid. Saving...")
             form.save()
             return redirect('perfil')
+        else:
+            print("Form errors:", form.errors)
     else:
         form = ProfileUpdateForm(instance=request.user)
     

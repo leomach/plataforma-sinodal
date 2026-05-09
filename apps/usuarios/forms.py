@@ -17,7 +17,7 @@ class ProfileUpdateForm(forms.ModelForm):
     
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'bio')
+        fields = ('first_name', 'last_name', 'email', 'foto', 'bio')
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Conte um pouco sobre você...'}),
         }
