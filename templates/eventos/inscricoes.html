@@ -3,23 +3,35 @@
 {% block title %}Inscrições: {{ evento.titulo }} - Plataforma Sinodal{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
+<div class="max-w-7xl mx-auto">
     <div class="mb-8">
         <a href="{% url 'gerenciar_eventos' %}" class="text-primary text-sm font-bold flex items-center gap-1 mb-4 hover:underline">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Voltar para Painel
         </a>
-        <h2 class="text-3xl font-bold text-text-main">Gerenciar Inscrições</h2>
-        <p class="text-text-muted">{{ evento.titulo }}</p>
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h2 class="text-3xl font-bold text-text-main">Gerenciar Inscrições</h2>
+                <p class="text-text-muted">{{ evento.titulo }}</p>
+            </div>
+            <div class="flex-shrink-0 text-right">
+                <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Total</span>
+                <p class="text-2xl font-bold text-primary">{{ inscricoes.count }}</p>
+            </div>
+        </div>
     </div>
 
     <!-- Filtros -->
     <div class="card p-4 mb-6">
-        <div class="flex flex-wrap gap-4">
-            <a href="{% url 'gerenciar_inscricoes' evento.slug %}" class="px-4 py-2 rounded-md text-sm font-bold {% if not request.GET.status %} bg-primary text-white {% else %} bg-slate-50 text-text-muted hover:bg-slate-100 {% endif %} transition-all">Todos</a>
-            {% for val, label in status_choices %}
-            <a href="?status={{ val }}" class="px-4 py-2 rounded-md text-sm font-bold {% if request.GET.status == val|stringformat:'i' %} bg-primary text-white {% else %} bg-slate-50 text-text-muted hover:bg-slate-100 {% endif %} transition-all">{{ label }}</a>
-            {% endfor %}
+        <div class="flex flex-wrap gap-2">
+            {% url 'gerenciar_inscricoes' evento.slug as base_url %}
+            <a href="{{ base_url }}" class="px-4 py-2 rounded-md text-sm font-bold transition-all {% if not filtro_ativo %}bg-primary text-white{% else %}bg-slate-50 text-text-muted hover:bg-slate-100{% endif %}">Todos</a>
+            {% if evento.valor_inscricao > 0 and evento.tipo_financeiro == MANUAL %}
+            <a href="{{ base_url }}?filtro=pendente_pagamento" class="px-4 py-2 rounded-md text-sm font-bold transition-all {% if filtro_ativo == 'pendente_pagamento' %}bg-yellow-500 text-white{% else %}bg-slate-50 text-text-muted hover:bg-slate-100{% endif %}">Aguardando Pagamento</a>
+            {% endif %}
+            <a href="{{ base_url }}?filtro=credencial_pendente" class="px-4 py-2 rounded-md text-sm font-bold transition-all {% if filtro_ativo == 'credencial_pendente' %}bg-blue-500 text-white{% else %}bg-slate-50 text-text-muted hover:bg-slate-100{% endif %}">Credencial Pendente</a>
+            <a href="{{ base_url }}?filtro=aprovados" class="px-4 py-2 rounded-md text-sm font-bold transition-all {% if filtro_ativo == 'aprovados' %}bg-tertiary text-white{% else %}bg-slate-50 text-text-muted hover:bg-slate-100{% endif %}">Aprovados</a>
+            <a href="{{ base_url }}?filtro=rejeitados" class="px-4 py-2 rounded-md text-sm font-bold transition-all {% if filtro_ativo == 'rejeitados' %}bg-secondary text-white{% else %}bg-slate-50 text-text-muted hover:bg-slate-100{% endif %}">Rejeitados</a>
         </div>
     </div>
 
@@ -31,6 +43,9 @@
                         <th class="px-4 py-4 w-10"></th>
                         <th class="px-6 py-4">Sócio</th>
                         <th class="px-6 py-4">Papel</th>
+                        {% if evento.valor_inscricao > 0 %}
+                        <th class="px-6 py-4">Pagamento</th>
+                        {% endif %}
                         <th class="px-6 py-4">Credencial</th>
                         <th class="px-6 py-4">Status</th>
                         <th class="px-6 py-4 text-right">Ações</th>
@@ -51,34 +66,89 @@
                         <td class="px-6 py-4">
                             <span class="text-xs font-semibold text-text-main">{{ inscricao.get_papel_evento_display }}</span>
                         </td>
+
+                        {% if evento.valor_inscricao > 0 %}
                         <td class="px-6 py-4">
-                            {% if inscricao.credential_url %}
-                            <a href="{{ inscricao.credential_url }}" target="_blank" class="text-primary hover:underline flex items-center gap-1 text-sm font-medium">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                Ver Drive
-                            </a>
+                            {% if inscricao.pago %}
+                                <div class="flex items-center gap-1.5 text-tertiary">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                    <div>
+                                        <p class="text-xs font-bold">Confirmado</p>
+                                        <p class="text-[10px] text-text-muted">{{ inscricao.data_pagamento|date:"d/m/Y" }}</p>
+                                    </div>
+                                </div>
+                            {% elif evento.tipo_financeiro == MANUAL %}
+                                <span class="inline-flex items-center gap-1 text-yellow-600 text-xs font-semibold">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    Aguardando PIX
+                                </span>
                             {% else %}
-                            <span class="text-text-muted text-xs italic">Não enviado</span>
+                                <span class="text-text-muted text-xs italic">Pendente</span>
                             {% endif %}
                         </td>
+                        {% endif %}
+
+                        <td class="px-6 py-4">
+                            {% if inscricao.papel_evento == PAPEL_DELEGADO or inscricao.papel_evento == PAPEL_EX_OFFICIO %}
+                                {% if inscricao.credencial_validada %}
+                                    <div class="flex items-center gap-1.5 text-tertiary">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                        <span class="text-xs font-bold">Validada</span>
+                                    </div>
+                                {% else %}
+                                    {% if inscricao.credential_url %}
+                                    <a href="{{ inscricao.credential_url }}" target="_blank" class="text-primary hover:underline flex items-center gap-1 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                        Ver Drive
+                                    </a>
+                                    {% else %}
+                                    <span class="text-text-muted text-xs italic">Não enviada</span>
+                                    {% endif %}
+                                {% endif %}
+                            {% else %}
+                                <span class="text-text-muted text-xs">—</span>
+                            {% endif %}
+                        </td>
+
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest
-                                {% if inscricao.status == 2 %} bg-tertiary/10 text-tertiary {% elif inscricao.status == 3 %} bg-secondary/10 text-secondary {% else %} bg-yellow-100 text-yellow-600 {% endif %}">
+                                {% if inscricao.status == STATUS_APROVADO %} bg-tertiary/10 text-tertiary
+                                {% elif inscricao.status == STATUS_REJEITADO %} bg-secondary/10 text-secondary
+                                {% else %} bg-yellow-100 text-yellow-600 {% endif %}">
                                 {{ inscricao.get_status_display }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right space-x-2">
-                            {% if inscricao.status != 2 %}
-                            <a href="{% url 'validar_inscricao' inscricao.id 'aprovar' %}" class="inline-flex items-center px-3 py-1 bg-tertiary text-white text-[10px] font-bold rounded-md hover:brightness-90 transition-all uppercase">Aprovar</a>
-                            {% endif %}
-                            {% if inscricao.status != 3 %}
-                            <a href="{% url 'validar_inscricao' inscricao.id 'rejeitar' %}" class="inline-flex items-center px-3 py-1 bg-secondary text-white text-[10px] font-bold rounded-md hover:brightness-90 transition-all uppercase">Rejeitar</a>
-                            {% endif %}
+
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                                {% if inscricao.status != STATUS_REJEITADO %}
+                                    {% if evento.valor_inscricao > 0 and evento.tipo_financeiro == MANUAL and not inscricao.pago %}
+                                    <a href="{% url 'confirmar_pagamento' inscricao.id %}" class="inline-flex items-center px-2.5 py-1 bg-primary text-white text-[10px] font-bold rounded-md hover:brightness-90 transition-all uppercase whitespace-nowrap">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        Confirmar PIX
+                                    </a>
+                                    {% endif %}
+
+                                    {% if inscricao.papel_evento == PAPEL_DELEGADO or inscricao.papel_evento == PAPEL_EX_OFFICIO %}
+                                        {% if not inscricao.credencial_validada %}
+                                        <a href="{% url 'validar_credencial' inscricao.id %}" class="inline-flex items-center px-2.5 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-md hover:brightness-90 transition-all uppercase whitespace-nowrap">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                            Validar Cred.
+                                        </a>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    <a href="{% url 'rejeitar_inscricao' inscricao.id %}" class="inline-flex items-center px-2.5 py-1 bg-secondary text-white text-[10px] font-bold rounded-md hover:brightness-90 transition-all uppercase"
+                                       onclick="return confirm('Rejeitar a inscrição de {{ inscricao.usuario.short_name }}?')">Rejeitar</a>
+                                {% else %}
+                                    <a href="{% url 'reativar_inscricao' inscricao.id %}" class="inline-flex items-center px-2.5 py-1 bg-slate-600 text-white text-[10px] font-bold rounded-md hover:brightness-90 transition-all uppercase">Reativar</a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
-                    <!-- Linha Detalhada (Escondida por padrão) -->
+                    <!-- Linha de detalhes expandível -->
                     <tr id="details-{{ inscricao.id }}" class="hidden bg-slate-50/80">
-                        <td colspan="6" class="px-10 py-6">
+                        <td colspan="{% if evento.valor_inscricao > 0 %}7{% else %}6{% endif %}" class="px-10 py-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {% for resposta in inscricao.respostas.all %}
                                 <div class="space-y-1">
@@ -86,22 +156,24 @@
                                     <p class="text-sm text-text-main font-medium">{{ resposta.valor|default:"-" }}</p>
                                 </div>
                                 {% empty %}
-                                <div class="col-span-full text-center text-text-muted text-xs italic py-2">
-                                    Nenhuma informação adicional preenchida para esta inscrição.
-                                </div>
+                                <div class="col-span-full text-center text-text-muted text-xs italic py-2">Nenhuma informação adicional.</div>
                                 {% endfor %}
                                 {% if inscricao.observacoes %}
                                 <div class="col-span-full border-t border-border pt-4 mt-2">
-                                    <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">Observações do Sócio</p>
+                                    <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">Observações</p>
                                     <p class="text-sm text-text-main italic leading-relaxed">{{ inscricao.observacoes }}</p>
                                 </div>
                                 {% endif %}
+                                <div class="col-span-full border-t border-border pt-4 mt-2">
+                                    <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">Inscrito em</p>
+                                    <p class="text-sm text-text-main">{{ inscricao.data_inscricao|date:"d/m/Y \à\s H:i" }}</p>
+                                </div>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-text-muted">Nenhuma inscrição encontrada para este filtro.</td>
+                        <td colspan="{% if evento.valor_inscricao > 0 %}7{% else %}6{% endif %}" class="px-6 py-12 text-center text-text-muted">Nenhuma inscrição encontrada para este filtro.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -114,7 +186,6 @@
     function toggleDetails(id, btn) {
         const row = document.getElementById(id);
         const icon = btn.querySelector('svg');
-        
         if (row.classList.contains('hidden')) {
             row.classList.remove('hidden');
             icon.classList.add('rotate-90');

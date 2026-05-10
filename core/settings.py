@@ -109,6 +109,19 @@ if os.getenv('CLOUDINARY_CLOUD_NAME') or os.getenv('CLOUDINARY_URL'):
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Email
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plataformasinodal.com.br')
+
+# InfinitePay
+INFINITEPAY_HANDLE = os.getenv('INFINITEPAY_HANDLE', '')
+INFINITEPAY_WEBHOOK_SECRET = os.getenv('INFINITEPAY_WEBHOOK_SECRET', '')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'usuarios.User'
 

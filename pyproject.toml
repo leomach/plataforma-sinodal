@@ -17,6 +17,7 @@ django-htmx = "^1.27.0"
 pillow = "^12.2.0"
 cloudinary = "^1.44.2"
 django-cloudinary-storage = "^0.3.0"
+requests = "^2.33.1"
 
 [tool.poetry.group.dev.dependencies]
 django-debug-toolbar = "^6.0.0"

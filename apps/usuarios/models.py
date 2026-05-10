@@ -13,6 +13,7 @@ class User(ImageCleanupMixin, AbstractUser):
     )
     foto = models.ImageField(_('Foto de Perfil'), upload_to='usuarios/fotos/', blank=True, null=True)
     bio = models.TextField(_('Bio'), max_length=500, blank=True)
+    whatsapp = models.CharField(_('WhatsApp'), max_length=20, blank=True, help_text=_('Inclua o DDD (ex: 11988887777)'))
     
     @property
     def display_name(self):
@@ -23,6 +24,10 @@ class User(ImageCleanupMixin, AbstractUser):
     @property
     def short_name(self):
         return self.first_name if self.first_name else self.username
+
+    @property
+    def perfil_completo(self):
+        return all([self.first_name, self.last_name, self.email, self.whatsapp])
 
     def __str__(self):
         return f"{self.display_name} ({self.get_tipo_display()})"

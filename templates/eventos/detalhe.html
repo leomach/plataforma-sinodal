@@ -81,6 +81,24 @@
                         <a href="{% url 'hub_evento' evento.slug %}" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-tertiary/20 bg-tertiary hover:brightness-110 mb-4">
                             Acessar Hub do Evento
                         </a>
+                    {% elif not inscricao.pago and evento.tipo_financeiro == INFINITEPAY %}
+                        <div class="bg-yellow-50 text-yellow-600 p-6 rounded-2xl text-center mb-6 border border-yellow-200">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                            </div>
+                            <p class="font-bold">Pagamento Pendente</p>
+                        </div>
+                        {% if inscricao.infinitepay_url %}
+                        <a href="{{ inscricao.infinitepay_url }}" target="_blank" rel="noopener noreferrer"
+                           class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-primary/20 mb-4">
+                            Retomar Pagamento
+                        </a>
+                        {% else %}
+                        <a href="{% url 'gerar_link_pagamento' inscricao.id %}"
+                           class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-primary/20 mb-4">
+                            Gerar Link de Pagamento
+                        </a>
+                        {% endif %}
                     {% elif inscricao.status == 3 %}
                         <div class="bg-secondary/10 text-secondary p-6 rounded-2xl text-center mb-6 border border-secondary/20">
                             <div class="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -125,12 +143,42 @@
                             <p class="text-[10px] font-bold text-text-muted uppercase tracking-tighter mb-1 text-center">Prazo Final</p>
                             <p class="text-xs font-bold text-secondary">{{ evento.inscricoes_fim|date:"d/m/Y \à\s H:i"|default:"Até esgotar" }}</p>
                         </div>
-                        <a href="{% url 'inscrever_evento' evento.slug %}" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02]">
-                            Inscrever-me Agora
-                        </a>
+                        
+                        {% if user.is_authenticated %}
+                            {% if user.perfil_completo %}
+                                <a href="{% url 'inscrever_evento' evento.slug %}" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02]">
+                                    Inscrever-me Agora
+                                </a>
+                            {% else %}
+                                <button onclick="document.getElementById('profile-modal').classList.remove('hidden')" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02]">
+                                    Inscrever-me Agora
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02]">
+                                Entre para se Inscrever
+                            </a>
+                        {% endif %}
                     {% endif %}
                 {% endif %}
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Perfil Incompleto -->
+<div id="profile-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-surface w-full max-w-md rounded-2xl overflow-hidden shadow-2xl p-8 text-center">
+        <div class="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-text-main mb-4">Perfil Incompleto</h3>
+        <p class="text-text-muted mb-8">Para se inscrever em eventos, você precisa preencher seu nome completo, e-mail e número de WhatsApp no seu perfil.</p>
+        <div class="flex flex-col gap-3">
+            <a href="{% url 'perfil' %}" class="btn-primary py-4 text-lg">Completar Meu Perfil</a>
+            <button onclick="document.getElementById('profile-modal').classList.add('hidden')" class="btn-outline border-none text-text-muted hover:text-text-main">Mais tarde</button>
         </div>
     </div>
 </div>

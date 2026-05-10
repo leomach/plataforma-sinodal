@@ -22,6 +22,11 @@ class Evento(ImageCleanupMixin, models.Model):
     local = models.CharField(_('Local'), max_length=255)
     banner = models.ImageField(_('Banner'), upload_to='eventos/banners/', blank=True, null=True)
     vagas = models.PositiveIntegerField(_('Quantidade de Vagas'), default=0, help_text=_('Deixe 0 para vagas ilimitadas'))
+    tipo_financeiro = models.IntegerField(
+        _('Tipo Financeiro'),
+        choices=constants.TIPO_FINANCEIRO_CHOICES,
+        default=constants.MANUAL,
+    )
     
     # Configuração de Pagamento (Manual)
     valor_inscricao = models.DecimalField(_('Valor da Inscrição'), max_digits=10, decimal_places=2, default=0)
@@ -88,11 +93,22 @@ class Inscricao(models.Model):
     # Status Final (Mantido para compatibilidade, mas calculado ou setado manualmente)
     status = models.IntegerField(_('Status Final'), choices=constants.STATUS_INSCRICAO_CHOICES, default=constants.STATUS_PENDENTE)
     
-    credential_url = models.URLField(_('URL da Credencial (Drive)'), blank=True, null=True)
+    credential_url = models.URLField(_('URL da Credencial (Drive)'), max_length=500, blank=True, null=True)
+    infinitepay_link_id = models.CharField(_('InfinitePay Invoice Slug'), max_length=100, blank=True)
+    infinitepay_url = models.URLField(_('URL de Pagamento InfinitePay'), max_length=500, blank=True, null=True)
     data_inscricao = models.DateTimeField(auto_now_add=True)
     observacoes = models.TextField(_('Observações'), blank=True)
     
     validado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='validacoes_realizadas')
+
+    def save(self, *args, **kwargs):
+        # Não recalcula se foi rejeitado manualmente
+        if self.status != constants.STATUS_REJEITADO:
+            pago_ok = self.pago or self.evento.valor_inscricao == 0
+            precisa_credencial = self.papel_evento in [constants.PAPEL_DELEGADO, constants.PAPEL_EX_OFFICIO]
+            aprovado = (pago_ok and self.credencial_validada) if precisa_credencial else pago_ok
+            self.status = constants.STATUS_APROVADO if aprovado else constants.STATUS_PENDENTE
+        super().save(*args, **kwargs)
 
     @property
     def pode_acessar_hub(self):
@@ -148,7 +164,7 @@ class Presenca(models.Model):
 class DocumentoEvento(models.Model):
     evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name='documentos')
     titulo = models.CharField(_('Título do Documento'), max_length=200)
-    arquivo_url = models.URLField(_('URL do Arquivo (Drive)'))
+    arquivo_url = models.URLField(_('URL do Arquivo (Drive)'), max_length=500)
     restrito_delegados = models.BooleanField(_('Restrito a Delegados'), default=False)
 
     def __str__(self):

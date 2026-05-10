@@ -15,16 +15,17 @@
 
     <form method="post" enctype="multipart/form-data" class="space-y-6">
         {% csrf_token %}
+
+        <!-- Informações Gerais -->
         <div class="card space-y-6">
+            <h3 class="text-lg font-bold text-text-main border-b border-border pb-4">Informações Gerais</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Título -->
                 <div class="md:col-span-2 space-y-1">
                     <label class="text-sm font-bold text-text-main block">{{ form.titulo.label }}</label>
                     <input type="text" name="titulo" value="{{ form.titulo.value|default:'' }}" class="input-field" required>
                     {% if form.titulo.errors %}<p class="text-secondary text-xs">{{ form.titulo.errors.0 }}</p>{% endif %}
                 </div>
 
-                <!-- Categoria -->
                 <div class="space-y-1">
                     <label class="text-sm font-bold text-text-main block">{{ form.categoria.label }}</label>
                     <select name="categoria" class="input-field bg-white">
@@ -34,13 +35,11 @@
                     </select>
                 </div>
 
-                <!-- Local -->
                 <div class="space-y-1">
                     <label class="text-sm font-bold text-text-main block">{{ form.local.label }}</label>
                     <input type="text" name="local" value="{{ form.local.value|default:'' }}" class="input-field" required>
                 </div>
 
-                <!-- Datas -->
                 <div class="space-y-1">
                     <label class="text-sm font-bold text-text-main block">{{ form.data_inicio.label }}</label>
                     {{ form.data_inicio }}
@@ -49,17 +48,30 @@
                     <label class="text-sm font-bold text-text-main block">{{ form.data_fim.label }}</label>
                     {{ form.data_fim }}
                 </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.inscricoes_inicio.label }}</label>
+                    {{ form.inscricoes_inicio }}
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.inscricoes_fim.label }}</label>
+                    {{ form.inscricoes_fim }}
+                    {% if form.inscricoes_fim.errors %}<p class="text-secondary text-xs">{{ form.inscricoes_fim.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-text-main block">{{ form.vagas.label }}</label>
+                    <input type="number" name="vagas" value="{{ form.vagas.value|default:'0' }}" min="0" class="input-field">
+                    <p class="text-xs text-text-muted">0 = vagas ilimitadas</p>
+                </div>
 
                 <!-- Banner -->
                 <div class="md:col-span-2 space-y-1">
-                    <label class="text-sm font-bold text-text-main block">Banner do Evento (Recomendado 21:9)</label>
-                    <div id="banner-dropzone" onclick="document.getElementById('id_banner').click()" 
+                    <label class="text-sm font-bold text-text-main block">Banner do Evento <span class="font-normal text-text-muted">(Recomendado 21:9)</span></label>
+                    <div id="banner-dropzone" onclick="document.getElementById('id_banner').click()"
                          class="relative w-full aspect-[21/9] md:h-64 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-slate-50 transition-all overflow-hidden group">
-                        
-                        <div id="banner-preview" class="absolute inset-0 w-full h-full bg-cover bg-center" 
+                        <div id="banner-preview" class="absolute inset-0 w-full h-full bg-cover bg-center"
                              style="{% if form.instance.banner %}background-image: url('{{ form.instance.banner.url }}'){% endif %}">
                         </div>
-
                         <div class="relative z-10 flex flex-col items-center gap-2 bg-white/80 p-4 rounded-lg shadow-sm group-hover:bg-white transition-colors mx-4 text-center">
                             <svg class="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Clique para alterar o banner</span>
@@ -71,23 +83,59 @@
                     {% if form.banner.errors %}<p class="text-secondary text-xs">{{ form.banner.errors.0 }}</p>{% endif %}
                 </div>
 
-                <!-- Descrição -->
                 <div class="md:col-span-2 space-y-1">
                     <label class="text-sm font-bold text-text-main block">{{ form.descricao.label }}</label>
                     {{ form.descricao }}
                 </div>
 
-                <!-- Status Ativo -->
                 <div class="md:col-span-2 flex items-center gap-2">
                     <input type="checkbox" name="ativo" id="id_ativo" {% if form.ativo.value %}checked{% endif %} class="w-4 h-4 text-primary rounded border-border focus:ring-primary">
                     <label for="id_ativo" class="text-sm font-bold text-text-main">Evento Ativo (visível para os sócios)</label>
                 </div>
             </div>
+        </div>
 
-            <div class="pt-6 border-t border-border flex flex-col sm:flex-row justify-end gap-3">
-                <a href="{% url 'gerenciar_eventos' %}" class="btn-outline text-center">Cancelar</a>
-                <button type="submit" class="btn-primary">Salvar Evento</button>
+        <!-- Configurações Financeiras -->
+        <div class="card space-y-6">
+            <h3 class="text-lg font-bold text-text-main border-b border-border pb-4">Configurações Financeiras</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-text-main block">Valor da Inscrição (R$)</label>
+                    <input type="number" name="valor_inscricao" id="id_valor_inscricao"
+                           value="{{ form.valor_inscricao.value|default:'0.00' }}"
+                           min="0" step="0.01" class="input-field">
+                    <p class="text-xs text-text-muted">0 = evento gratuito</p>
+                    {% if form.valor_inscricao.errors %}<p class="text-secondary text-xs">{{ form.valor_inscricao.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Tipo financeiro: visível apenas quando valor > 0 -->
+                <div class="space-y-1" id="tipo-financeiro-section" style="display:none">
+                    <label class="text-sm font-bold text-text-main block">Método de Pagamento</label>
+                    <select name="tipo_financeiro" id="id_tipo_financeiro" class="input-field bg-white">
+                        <option value="1" {% if form.tipo_financeiro.value|stringformat:"s" == "1" or not form.tipo_financeiro.value %}selected{% endif %}>Manual (PIX)</option>
+                        <option value="2" {% if form.tipo_financeiro.value|stringformat:"s" == "2" %}selected{% endif %}>InfinitePay</option>
+                    </select>
+                </div>
+
+                <!-- Campos PIX: visíveis apenas quando tipo = MANUAL -->
+                <div class="md:col-span-2 space-y-1" id="pix-section" style="display:none">
+                    <label class="text-sm font-bold text-text-main block">{{ form.chave_pix.label }}</label>
+                    {{ form.chave_pix }}
+                    {% if form.chave_pix.errors %}<p class="text-secondary text-xs">{{ form.chave_pix.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="md:col-span-2 space-y-1" id="instrucoes-section" style="display:none">
+                    <label class="text-sm font-bold text-text-main block">{{ form.instrucoes_pagamento.label }}</label>
+                    {{ form.instrucoes_pagamento }}
+                </div>
+
             </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-end gap-3">
+            <a href="{% url 'gerenciar_eventos' %}" class="btn-outline text-center">Cancelar</a>
+            <button type="submit" class="btn-primary">Salvar Evento</button>
         </div>
     </form>
 </div>
@@ -96,8 +144,59 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Aspect Ratio 21/9 = 2.333
-        setupImageUpload('id_banner', 'banner-preview', 21/9);
+        setupImageUpload('id_banner', 'banner-preview', 21/9, true);
+
+        const valorInput = document.getElementById('id_valor_inscricao');
+        const tipoSection = document.getElementById('tipo-financeiro-section');
+        const tipoSelect = document.getElementById('id_tipo_financeiro');
+        const pixSection = document.getElementById('pix-section');
+        const instrucoesSection = document.getElementById('instrucoes-section');
+
+        function toggleFinanceiro() {
+            const valor = parseFloat(valorInput.value) || 0;
+            if (valor > 0) {
+                tipoSection.style.display = '';
+                tipoSelect.disabled = false;
+                togglePix();
+            } else {
+                tipoSection.style.display = 'none';
+                pixSection.style.display = 'none';
+                instrucoesSection.style.display = 'none';
+                // Quando valor=0, força o select a enviar GRATUITO (0)
+                tipoSelect.disabled = true;
+                // Garante que o form submeta 0 via nome duplicado não, criamos um hidden dinâmico
+                ensureGratuitoHidden(true);
+            }
+        }
+
+        // Injeta/remove um campo hidden com valor=0 quando o evento é gratuito
+        function ensureGratuitoHidden(ativo) {
+            let hidden = document.getElementById('tipo-financeiro-gratuito');
+            if (ativo) {
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'tipo_financeiro';
+                    hidden.id = 'tipo-financeiro-gratuito';
+                    hidden.value = '0';
+                    valorInput.closest('form').appendChild(hidden);
+                }
+            } else {
+                if (hidden) hidden.remove();
+            }
+        }
+
+        function togglePix() {
+            const isManual = tipoSelect.value === '1';
+            pixSection.style.display = isManual ? '' : 'none';
+            instrucoesSection.style.display = isManual ? '' : 'none';
+            ensureGratuitoHidden(false);
+        }
+
+
+        valorInput.addEventListener('input', toggleFinanceiro);
+        tipoSelect.addEventListener('change', togglePix);
+        toggleFinanceiro();
     });
 </script>
 {% endblock %}

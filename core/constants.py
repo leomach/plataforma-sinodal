@@ -42,6 +42,17 @@ STATUS_INSCRICAO_CHOICES = [
     (STATUS_REJEITADO, _('Rejeitado')),
 ]
 
+# Tipo Financeiro do Evento
+GRATUITO = 0
+MANUAL = 1
+INFINITEPAY = 2
+
+TIPO_FINANCEIRO_CHOICES = [
+    (GRATUITO, 'Gratuito'),
+    (MANUAL, 'Manual (PIX)'),
+    (INFINITEPAY, 'InfinitePay'),
+]
+
 # Tipos de Campos Dinâmicos
 CAMPO_TEXTO = 1
 CAMPO_NUMERO = 2
