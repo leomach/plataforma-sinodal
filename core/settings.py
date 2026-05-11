@@ -103,12 +103,12 @@ if os.getenv('CLOUDINARY_URL'):
 
 STORAGES = {
     "default": { "BACKEND": "django.core.files.storage.FileSystemStorage" },
-    "staticfiles": { "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage" },
+    "staticfiles": { "BACKEND": "whitenoise.storage.ManifestStaticFilesStorage" },
 }
 
 # Legacy settings for compatibility with older libraries
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.ManifestStaticFilesStorage'
 WHITENOISE_KEEP_ONLY_HASHED_FILES=False
 
 # Use Cloudinary for Media if configured
