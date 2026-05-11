@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django_htmx',
     'apps.eventos',
     'apps.usuarios',
+    'apps.hub',
 ]
 
 MIDDLEWARE = [
