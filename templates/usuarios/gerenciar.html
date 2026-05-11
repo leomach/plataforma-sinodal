@@ -4,85 +4,109 @@
 
 {% block content %}
 <div class="max-w-6xl mx-auto">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
-            <h2 class="text-3xl font-bold text-primary">Gerenciar Usuários</h2>
-            <p class="text-text-muted text-sm mt-1">Controle de acesso e permissões da plataforma.</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-primary serif-title">Gerenciar Usuários</h2>
+            <p class="text-text-muted mt-1">Controle de acesso e permissões da plataforma.</p>
         </div>
-        <span class="bg-primary/10 text-primary px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+        <span class="badge-primary bg-primary/10 text-primary border-none shadow-none text-xs px-5 py-2">
             Painel Administrativo
         </span>
     </div>
 
     <!-- Barra de Busca -->
-    <div class="card mb-6 p-4">
-        <form method="get" class="flex gap-2">
+    <div class="card mb-8 p-4 md:p-6 bg-surface-hover/30">
+        <form method="get" class="flex flex-col sm:flex-row gap-3">
             <div class="relative flex-grow">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-text-muted" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
                 <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nome, usuário ou e-mail..." 
-                       class="w-full pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                       class="input-field pl-11 py-3">
             </div>
-            <button type="submit" class="btn-primary py-2">Buscar</button>
-            {% if query %}
-                <a href="{% url 'gerenciar_usuarios' %}" class="btn-outline py-2 flex items-center justify-center">Limpar</a>
-            {% endif %}
+            <div class="flex gap-2">
+                <button type="submit" class="btn-primary px-8 py-3 flex-grow sm:flex-grow-0">Buscar</button>
+                {% if query %}
+                    <a href="{% url 'gerenciar_usuarios' %}" class="btn-outline px-6 py-3" title="Limpar Busca">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </a>
+                {% endif %}
+            </div>
         </form>
     </div>
 
-    <div class="card overflow-hidden p-0">
+    <div class="card overflow-hidden p-0 border border-border/60">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse min-w-[700px]">
                 <thead>
-                    <tr class="bg-slate-50 border-b border-border text-text-muted uppercase text-[10px] font-bold tracking-widest">
-                        <th class="px-6 py-4">Usuário / Nome</th>
-                        <th class="px-6 py-4">E-mail</th>
-                        <th class="px-6 py-4">Tipo Atual</th>
-                        <th class="px-6 py-4 text-right">Ações</th>
+                    <tr class="bg-surface-hover border-b border-border text-text-muted uppercase text-[10px] font-bold tracking-widest">
+                        <th class="px-6 py-5">Usuário / Nome</th>
+                        <th class="px-6 py-5">E-mail / WhatsApp</th>
+                        <th class="px-6 py-5">Tipo Atual</th>
+                        <th class="px-6 py-5 text-right">Ações</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
                     {% for usuario in usuarios %}
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-4">
-                            <div class="font-bold text-text-main leading-tight">{{ usuario.display_name }}</div>
-                            <div class="text-xs text-text-muted">@{{ usuario.username }}</div>
-                            {% if usuario.is_superuser %}
-                            <span class="inline-block mt-1 text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter">Superuser</span>
-                            {% endif %}
+                    <tr class="hover:bg-surface-hover/30 transition-colors">
+                        <td class="px-6 py-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold text-sm border border-primary/10 flex-shrink-0">
+                                    {% if usuario.foto %}
+                                        <img src="{{ usuario.foto.url }}" alt="" class="w-full h-full rounded-full object-cover">
+                                    {% else %}
+                                        {{ usuario.display_name|slice:":1" }}
+                                    {% endif %}
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="font-bold text-text-main leading-tight truncate serif-title">{{ usuario.display_name }}</div>
+                                    <div class="text-xs text-text-muted truncate">@{{ usuario.username }}</div>
+                                    {% if usuario.is_superuser %}
+                                    <span class="inline-block mt-1 text-[8px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest border border-red-200">Superuser</span>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </td>
-                        <td class="px-6 py-4 text-text-muted text-sm">
-                            {{ usuario.email|default:"-" }}
+                        <td class="px-6 py-5">
+                            <div class="text-sm text-text-main font-medium truncate">{{ usuario.email|default:"—" }}</div>
+                            <div class="text-[10px] text-text-muted font-bold">{{ usuario.whatsapp|default:"Sem contato" }}</div>
                         </td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider
-                                {% if usuario.tipo == 2 %} bg-tertiary/10 text-tertiary {% else %} bg-secondary/10 text-secondary {% endif %}">
+                        <td class="px-6 py-5">
+                            <span class="{% if usuario.tipo == 2 %} badge-success {% else %} badge-primary {% endif %} shadow-none">
                                 {{ usuario.get_tipo_display }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right space-x-2">
-                            {% if not usuario.is_superuser %}
-                                {% if usuario.tipo == 1 %}
-                                <a href="{% url 'promover_usuario' usuario.id %}" 
-                                   class="inline-flex items-center px-3 py-1 bg-tertiary text-white text-[10px] font-bold rounded-md hover:brightness-90 transition-all uppercase tracking-tighter">
-                                    Promover
-                                </a>
-                                {% else %}
-                                <a href="{% url 'rebaixar_usuario' usuario.id %}" 
-                                   class="inline-flex items-center px-3 py-1 border border-secondary text-secondary text-[10px] font-bold rounded-md hover:bg-secondary/5 transition-all uppercase tracking-tighter">
-                                    Rebaixar
-                                </a>
+                        <td class="px-6 py-5 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                {% if not usuario.is_superuser %}
+                                    {% if usuario.tipo == 1 %}
+                                    <a href="{% url 'promover_usuario' usuario.id %}" 
+                                       class="btn-tertiary px-3 py-1.5 text-[9px] uppercase tracking-widest font-black">
+                                        Promover
+                                    </a>
+                                    {% else %}
+                                    <a href="{% url 'rebaixar_usuario' usuario.id %}" 
+                                       class="btn-outline px-3 py-1.5 text-[9px] uppercase tracking-widest font-black border-error text-error hover:bg-error hover:text-white">
+                                        Rebaixar
+                                    </a>
+                                    {% endif %}
                                 {% endif %}
-                            {% endif %}
+                                <a href="#" class="btn-outline p-2 border-none text-text-muted hover:text-primary transition-all" title="Ver Detalhes">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-text-muted">
-                            Nenhum usuário encontrado para a busca "{{ query }}".
+                        <td colspan="4" class="px-6 py-20 text-center bg-surface-hover/10">
+                            <div class="w-16 h-16 bg-surface-hover rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            </div>
+                            <p class="text-text-muted font-medium">Nenhum usuário encontrado para a busca <span class="text-primary font-bold">"{{ query }}"</span>.</p>
+                            <a href="{% url 'gerenciar_usuarios' %}" class="btn-outline mt-6 text-xs">Limpar Busca</a>
                         </td>
                     </tr>
                     {% endfor %}

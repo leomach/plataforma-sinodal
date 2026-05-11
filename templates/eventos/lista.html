@@ -4,21 +4,21 @@
 
 {% block content %}
 <div class="max-w-6xl mx-auto">
-    <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
         <div>
-            <h1 class="text-4xl font-bold text-primary mb-2">Eventos Sinodais</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-primary mb-2 serif-title">Eventos Sinodais</h1>
             <p class="text-text-muted">Participe dos nossos congressos, encontros e treinamentos.</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {% for evento in eventos %}
-        <div class="card group overflow-hidden flex flex-col hover:border-primary/50 transition-all duration-300">
+        <div class="card card-hover group overflow-hidden flex flex-col p-0">
             {% if evento.banner %}
             <div class="h-48 overflow-hidden relative">
                 <img src="{{ evento.banner.url }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                 <div class="absolute top-4 right-4">
-                    <span class="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-primary shadow-sm">
+                    <span class="badge-primary bg-white/90 backdrop-blur shadow-sm">
                         {{ evento.get_categoria_display }}
                     </span>
                 </div>
@@ -27,7 +27,7 @@
             <div class="h-48 bg-gradient-to-br from-primary/5 to-primary/20 flex items-center justify-center relative">
                 <svg class="w-16 h-16 text-primary/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 <div class="absolute top-4 right-4">
-                    <span class="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-primary shadow-sm">
+                    <span class="badge-primary bg-white/90 backdrop-blur shadow-sm">
                         {{ evento.get_categoria_display }}
                     </span>
                 </div>
@@ -35,37 +35,42 @@
             {% endif %}
 
             <div class="p-6 flex-grow flex flex-col">
-                <div class="flex justify-between items-start mb-2">
+                <div class="flex justify-between items-start mb-3 gap-2">
                     <h3 class="text-xl font-bold text-text-main leading-tight group-hover:text-primary transition-colors">{{ evento.titulo }}</h3>
                     {% if evento.vagas > 0 %}
-                        <span class="shrink-0 text-[10px] font-bold {% if evento.esgotado %} text-secondary {% else %} text-tertiary {% endif %} uppercase tracking-tighter">
+                        <span class="{% if evento.esgotado %} badge-error {% else %} badge-success {% endif %}">
                             {% if evento.esgotado %} Esgotado {% else %} {{ evento.vagas_disponiveis }} Vagas {% endif %}
                         </span>
                     {% endif %}
                 </div>
                 
-                <div class="space-y-2 mb-6 flex-grow">
+                <div class="space-y-3 mb-6 flex-grow">
                     <div class="flex items-center gap-2 text-sm text-text-muted">
-                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        {{ evento.data_inicio|date:"d/m/Y" }}
+                        <div class="bg-primary/5 p-1.5 rounded-md text-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </div>
+                        <span class="font-medium">{{ evento.data_inicio|date:"d/m/Y" }}</span>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-text-muted">
-                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        {{ evento.local }}
+                        <div class="bg-primary/5 p-1.5 rounded-md text-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </div>
+                        <span class="font-medium truncate">{{ evento.local }}</span>
                     </div>
                 </div>
 
-                <a href="{% url 'detalhe_evento' evento.slug %}" class="btn-primary w-full text-center text-sm py-2.5">
+                <a href="{% url 'detalhe_evento' evento.slug %}" class="btn-primary w-full text-sm">
                     Ver Detalhes
                 </a>
             </div>
         </div>
         {% empty %}
-        <div class="col-span-full py-20 text-center bg-white rounded-2xl border border-dashed border-border">
-            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div class="col-span-full py-20 text-center bg-white rounded-2xl border border-dashed border-border shadow-inner">
+            <div class="w-20 h-20 bg-surface-hover rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             </div>
-            <p class="text-text-muted font-medium">Nenhum evento ativo no momento.</p>
+            <p class="text-text-muted font-medium mb-4">Nenhum evento ativo no momento.</p>
+            <p class="text-xs text-text-muted/60">Fique atento às nossas redes sociais para novidades.</p>
         </div>
         {% endfor %}
     </div>
