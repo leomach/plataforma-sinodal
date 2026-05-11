@@ -1,3 +1,4 @@
+# Railway optimized settings
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -9,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-2q7jnn0^20c8^ui4k1hwjhfq2+h@5)2k#s4^)aai=cduthvt_&')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -82,6 +83,13 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Railway/Production Security
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 # Cloudinary Configuration
 CLOUDINARY_STORAGE = {}
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
@@ -95,18 +103,18 @@ if os.getenv('CLOUDINARY_URL'):
 
 STORAGES = {
     "default": { "BACKEND": "django.core.files.storage.FileSystemStorage" },
-    "staticfiles": { "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage" },
+    "staticfiles": { "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage" },
 }
 
-# Legacy settings for compatibility with older libraries (like django-cloudinary-storage)
-DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
-STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
+# Legacy settings for compatibility with older libraries
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Use Cloudinary for Media if any config is present
-if os.getenv('CLOUDINARY_CLOUD_NAME') or os.getenv('CLOUDINARY_URL'):
+# Use Cloudinary for Media if configured
+if os.getenv('CLOUDINARY_CLOUD_NAME'):
     storage_backend = "cloudinary_storage.storage.MediaCloudinaryStorage"
     STORAGES["default"] = { "BACKEND": storage_backend }
-    DEFAULT_FILE_STORAGE = storage_backend # Update legacy setting as well
+    DEFAULT_FILE_STORAGE = storage_backend
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
