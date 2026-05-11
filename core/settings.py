@@ -110,6 +110,7 @@ STORAGES = {
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 STATICFILES_STORAGE = 'whitenoise.storage.ManifestStaticFilesStorage'
 WHITENOISE_KEEP_ONLY_HASHED_FILES=False
+WHITENOISE_MANIFEST_STRICT = False
 
 # Use Cloudinary for Media if configured
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
