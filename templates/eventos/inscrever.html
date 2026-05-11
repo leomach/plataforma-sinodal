@@ -12,6 +12,14 @@
     <form method="post" class="space-y-8">
         {% csrf_token %}
         
+        {% if form.non_field_errors %}
+            <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                {% for error in form.non_field_errors %}
+                    <p class="text-secondary text-sm font-medium">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <!-- Dados Básicos da Inscrição -->
         <div class="card">
             <h3 class="text-xl font-bold text-text-main mb-6 flex items-center gap-2 border-b border-border pb-4">
