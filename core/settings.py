@@ -103,12 +103,12 @@ if os.getenv('CLOUDINARY_URL'):
 
 STORAGES = {
     "default": { "BACKEND": "django.core.files.storage.FileSystemStorage" },
-    "staticfiles": { "BACKEND": "whitenoise.storage.ManifestStaticFilesStorage" },
+    "staticfiles": { "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" },
 }
 
 # Legacy settings for compatibility with older libraries
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-STATICFILES_STORAGE = 'whitenoise.storage.ManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 WHITENOISE_KEEP_ONLY_HASHED_FILES=False
 WHITENOISE_MANIFEST_STRICT = False
 
