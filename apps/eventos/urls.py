@@ -9,6 +9,7 @@ urlpatterns = [
     path('<slug:slug>/editar/', views.editar_evento, name='editar_evento'),
     path('<slug:slug>/campos/', views.gerenciar_campos_evento, name='gerenciar_campos_evento'),
     path('<slug:slug>/inscrever/', views.inscrever_evento, name='inscrever_evento'),
+    path('<slug:slug>/editar-inscricao/', views.editar_inscricao, name='editar_inscricao'),
     path('<slug:slug>/confirmacao/', views.confirmacao_inscricao, name='confirmacao_inscricao'),
     path('<slug:slug>/inscricoes/', views.gerenciar_inscricoes, name='gerenciar_inscricoes'),
     path('<slug:slug>/hub/', views.hub_evento, name='hub_evento'),

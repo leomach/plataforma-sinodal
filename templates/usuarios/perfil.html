@@ -118,10 +118,17 @@
                         </div>
                     </div>
                     <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-border flex-shrink-0">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap
-                            {% if inscricao.status == 2 %} bg-tertiary/10 text-tertiary {% elif inscricao.status == 3 %} bg-secondary/10 text-secondary {% else %} bg-yellow-100 text-yellow-600 {% endif %}">
-                            {{ inscricao.get_status_display }}
-                        </span>
+                        <div class="flex items-center gap-3">
+                            {% if inscricao.status != 2 %}
+                            <a href="{% url 'editar_inscricao' inscricao.evento.slug %}" class="text-xs font-bold text-primary hover:underline uppercase tracking-tighter">
+                                Editar
+                            </a>
+                            {% endif %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap
+                                {% if inscricao.status == 2 %} bg-tertiary/10 text-tertiary {% elif inscricao.status == 3 %} bg-secondary/10 text-secondary {% else %} bg-yellow-100 text-yellow-600 {% endif %}">
+                                {{ inscricao.get_status_display }}
+                            </span>
+                        </div>
                         <p class="text-[10px] text-text-muted">{{ inscricao.data_inscricao|date:"d/m/Y" }}</p>
                     </div>
                 </div>

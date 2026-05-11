@@ -305,7 +305,10 @@ def validar_credencial(request, inscricao_id):
 def rejeitar_inscricao(request, inscricao_id):
     inscricao = get_object_or_404(Inscricao, id=inscricao_id)
     if inscricao.status != constants.STATUS_REJEITADO:
+        motivo = request.POST.get('motivo') or request.GET.get('motivo')
         inscricao.status = constants.STATUS_REJEITADO
+        if motivo:
+            inscricao.motivo_rejeicao = motivo
         inscricao.save()
         messages.warning(request, f'Inscrição de {inscricao.usuario.short_name} rejeitada.')
     return redirect('gerenciar_inscricoes', slug=inscricao.evento.slug)
@@ -402,6 +405,41 @@ def webhook_infinitepay(request, token):
         emails.enviar_inscricao_aprovada(inscricao)
 
     return JsonResponse({'ok': True})
+
+
+@login_required
+@transaction.atomic
+def editar_inscricao(request, slug):
+    evento = get_object_or_404(Evento, slug=slug, ativo=True)
+    inscricao = get_object_or_404(Inscricao.objects.select_for_update(), usuario=request.user, evento=evento)
+
+    # Bloqueia edição se já estiver aprovado
+    if inscricao.status == constants.STATUS_APROVADO:
+        messages.error(request, 'Inscrições aprovadas não podem ser editadas.')
+        return redirect('confirmacao_inscricao', slug=slug)
+
+    if request.method == 'POST':
+        form = InscricaoForm(request.POST, instance=inscricao, evento=evento)
+        if form.is_valid():
+            inscricao = form.save(commit=False)
+            
+            # Se estava rejeitado, volta para pendente ao editar
+            if inscricao.status == constants.STATUS_REJEITADO:
+                inscricao.status = constants.STATUS_PENDENTE
+                
+            inscricao.save()
+            form.save_custom_fields(inscricao)
+
+            messages.success(request, 'Sua inscrição foi atualizada com sucesso!')
+            return redirect('confirmacao_inscricao', slug=slug)
+    else:
+        form = InscricaoForm(instance=inscricao, evento=evento)
+
+    return render(request, 'eventos/inscrever.html', {
+        'evento': evento, 
+        'form': form,
+        'inscricao': inscricao
+    })
 
 
 @login_required

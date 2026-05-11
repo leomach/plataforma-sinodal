@@ -98,6 +98,7 @@ class Inscricao(models.Model):
     infinitepay_url = models.URLField(_('URL de Pagamento InfinitePay'), max_length=500, blank=True, null=True)
     data_inscricao = models.DateTimeField(auto_now_add=True)
     observacoes = models.TextField(_('Observações'), blank=True)
+    motivo_rejeicao = models.TextField(_('Motivo da Rejeição'), blank=True, null=True)
     
     validado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='validacoes_realizadas')
 

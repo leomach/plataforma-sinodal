@@ -105,6 +105,12 @@
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                             </div>
                             <p class="font-bold">Inscrição Rejeitada</p>
+                            {% if inscricao.motivo_rejeicao %}
+                                <div class="mt-4 p-3 bg-white/50 rounded-lg text-sm text-secondary text-left border border-secondary/10">
+                                    <p class="font-bold mb-1 uppercase text-[10px]">Motivo da Rejeição:</p>
+                                    {{ inscricao.motivo_rejeicao }}
+                                </div>
+                            {% endif %}
                         </div>
                     {% else %}
                         <div class="bg-yellow-50 text-yellow-600 p-6 rounded-2xl text-center mb-6 border border-yellow-200">
@@ -114,6 +120,13 @@
                             <p class="font-bold">Inscrição Pendente</p>
                         </div>
                     {% endif %}
+
+                    {% if inscricao.status != 2 %}
+                        <a href="{% url 'editar_inscricao' evento.slug %}" class="btn-primary w-full text-center block py-4 text-lg font-bold shadow-lg shadow-primary/20 mb-4">
+                            Editar Inscrição
+                        </a>
+                    {% endif %}
+                    
                     <a href="{% url 'perfil' %}" class="btn-outline w-full text-center block py-3">Ver Minhas Inscrições</a>
                 {% else %}
                     {% if pre_inscricao %}

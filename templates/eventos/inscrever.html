@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Inscrição: {{ evento.titulo }} - Plataforma Sinodal{% endblock %}
+{% block title %}{% if inscricao %}Editar{% else %}Inscrição{% endif %}: {{ evento.titulo }} - Plataforma Sinodal{% endblock %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto">
     <div class="mb-10">
-        <h1 class="text-3xl font-bold text-primary mb-2">Inscrição no Evento</h1>
-        <p class="text-text-muted">Preencha os dados abaixo para confirmar sua participação em <span class="font-bold text-text-main">{{ evento.titulo }}</span>.</p>
+        <h1 class="text-3xl font-bold text-primary mb-2">{% if inscricao %}Editar Inscrição{% else %}Inscrição no Evento{% endif %}</h1>
+        <p class="text-text-muted">{% if inscricao %}Atualize seus dados abaixo.{% else %}Preencha os dados abaixo para confirmar sua participação em <span class="font-bold text-text-main">{{ evento.titulo }}</span>.{% endif %}</p>
     </div>
 
     <form method="post" class="space-y-8">
@@ -82,8 +82,8 @@
         {% endif %}
 
         <div class="flex items-center justify-between pt-6 border-t border-border">
-            <a href="{% url 'detalhe_evento' evento.slug %}" class="text-text-muted hover:text-text-main font-semibold transition-colors">Cancelar</a>
-            <button type="submit" class="btn-primary px-10 py-3 shadow-lg shadow-primary/30">Confirmar Inscrição</button>
+            <a href="{% if inscricao %}{% url 'confirmacao_inscricao' evento.slug %}{% else %}{% url 'detalhe_evento' evento.slug %}{% endif %}" class="text-text-muted hover:text-text-main font-semibold transition-colors">Cancelar</a>
+            <button type="submit" class="btn-primary px-10 py-3 shadow-lg shadow-primary/30">{% if inscricao %}Salvar Alterações{% else %}Confirmar Inscrição{% endif %}</button>
         </div>
     </form>
 </div>

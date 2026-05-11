@@ -139,7 +139,7 @@
                                     {% endif %}
 
                                     <a href="{% url 'rejeitar_inscricao' inscricao.id %}" class="inline-flex items-center px-2.5 py-1 bg-secondary text-white text-[10px] font-bold rounded-md hover:brightness-90 transition-all uppercase"
-                                       onclick="return confirm('Rejeitar a inscrição de {{ inscricao.usuario.short_name }}?')">Rejeitar</a>
+                                       onclick="const motivo = prompt('Informe o motivo da rejeição para {{ inscricao.usuario.short_name }}:'); if (motivo !== null) { this.href += '?motivo=' + encodeURIComponent(motivo); return true; } return false;">Rejeitar</a>
                                 {% else %}
                                     <a href="{% url 'reativar_inscricao' inscricao.id %}" class="inline-flex items-center px-2.5 py-1 bg-slate-600 text-white text-[10px] font-bold rounded-md hover:brightness-90 transition-all uppercase">Reativar</a>
                                 {% endif %}
@@ -150,6 +150,12 @@
                     <tr id="details-{{ inscricao.id }}" class="hidden bg-slate-50/80">
                         <td colspan="{% if evento.valor_inscricao > 0 %}7{% else %}6{% endif %}" class="px-10 py-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {% if inscricao.motivo_rejeicao %}
+                                <div class="col-span-full mb-4 p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
+                                    <p class="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Motivo da Rejeição</p>
+                                    <p class="text-sm text-secondary font-medium">{{ inscricao.motivo_rejeicao }}</p>
+                                </div>
+                                {% endif %}
                                 {% for resposta in inscricao.respostas.all %}
                                 <div class="space-y-1">
                                     <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest">{{ resposta.campo.label }}</p>
