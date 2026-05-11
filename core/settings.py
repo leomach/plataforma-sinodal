@@ -98,11 +98,15 @@ STORAGES = {
     "staticfiles": { "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage" },
 }
 
+# Legacy settings for compatibility with older libraries (like django-cloudinary-storage)
+DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
+STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
+
 # Use Cloudinary for Media if any config is present
 if os.getenv('CLOUDINARY_CLOUD_NAME') or os.getenv('CLOUDINARY_URL'):
     storage_backend = "cloudinary_storage.storage.MediaCloudinaryStorage"
     STORAGES["default"] = { "BACKEND": storage_backend }
-    DEFAULT_FILE_STORAGE = storage_backend # Fallback for older apps
+    DEFAULT_FILE_STORAGE = storage_backend # Update legacy setting as well
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
