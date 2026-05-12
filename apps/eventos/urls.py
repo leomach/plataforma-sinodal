@@ -12,7 +12,6 @@ urlpatterns = [
     path('<slug:slug>/editar-inscricao/', views.editar_inscricao, name='editar_inscricao'),
     path('<slug:slug>/confirmacao/', views.confirmacao_inscricao, name='confirmacao_inscricao'),
     path('<slug:slug>/inscricoes/', views.gerenciar_inscricoes, name='gerenciar_inscricoes'),
-    path('<slug:slug>/hub/', views.hub_evento, name='hub_evento'),
     # Ações de inscrição (liderança)
     path('inscricao/<int:inscricao_id>/confirmar-pagamento/', views.confirmar_pagamento, name='confirmar_pagamento'),
     path('inscricao/<int:inscricao_id>/validar-credencial/', views.validar_credencial, name='validar_credencial'),

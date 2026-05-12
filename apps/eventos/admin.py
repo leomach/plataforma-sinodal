@@ -1,16 +1,9 @@
 from django.contrib import admin
-from .models import Evento, CampoEvento, Inscricao, RespostaInscricao, Sessao, Presenca, DocumentoEvento
+from .models import Evento, CampoEvento, Inscricao, RespostaInscricao
+from apps.hub.admin import SessaoInline, DocumentoEventoInline
 
 class CampoEventoInline(admin.TabularInline):
     model = CampoEvento
-    extra = 1
-
-class DocumentoEventoInline(admin.TabularInline):
-    model = DocumentoEvento
-    extra = 1
-
-class SessaoInline(admin.TabularInline):
-    model = Sessao
     extra = 1
 
 @admin.register(Evento)
@@ -33,16 +26,5 @@ class InscricaoAdmin(admin.ModelAdmin):
     search_fields = ('usuario__username', 'usuario__first_name', 'evento__titulo')
     inlines = [RespostaInscricaoInline]
 
-@admin.register(Sessao)
-class SessaoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'evento', 'data_hora')
-    list_filter = ('evento',)
-
-@admin.register(Presenca)
-class PresencaAdmin(admin.ModelAdmin):
-    list_display = ('sessao', 'inscricao', 'presente')
-    list_filter = ('sessao', 'presente')
-
 admin.site.register(CampoEvento)
 admin.site.register(RespostaInscricao)
-admin.site.register(DocumentoEvento)

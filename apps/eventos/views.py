@@ -12,7 +12,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.conf import settings
 
-from .models import Evento, Inscricao, CampoEvento, RespostaInscricao, Sessao, Presenca
+from .models import Evento, Inscricao, CampoEvento, RespostaInscricao
+from apps.hub.models import Sessao, Presenca
 from .forms import InscricaoForm, EventoForm, CampoEventoFormSet
 from . import emails
 from .services import infinitepay as ip_service
@@ -439,24 +440,4 @@ def editar_inscricao(request, slug):
         'evento': evento, 
         'form': form,
         'inscricao': inscricao
-    })
-
-
-@login_required
-def hub_evento(request, slug):
-    evento = get_object_or_404(Evento, slug=slug)
-    inscricao = get_object_or_404(Inscricao, usuario=request.user, evento=evento)
-
-    if inscricao.status != constants.STATUS_APROVADO:
-        messages.error(request, 'Você precisa ter sua inscrição aprovada para acessar o Hub.')
-        return redirect('detalhe_evento', slug=slug)
-
-    documentos = evento.documentos.all()
-    if inscricao.papel_evento not in [constants.PAPEL_DELEGADO, constants.PAPEL_EX_OFFICIO]:
-        documentos = documentos.filter(restrito_delegados=False)
-
-    return render(request, 'eventos/hub.html', {
-        'evento': evento,
-        'inscricao': inscricao,
-        'documentos': documentos,
     })
