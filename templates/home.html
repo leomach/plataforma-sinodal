@@ -74,7 +74,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="font-bold text-text-main group-hover:text-primary transition-colors truncate">{{ evento.titulo }}</h4>
-                                <p class="text-xs text-text-muted truncate">{{ evento.local }}</p>
+                                <p class="text-xs text-text-muted break-words">{{ evento.local }}</p>
                             </div>
                         </div>
                         <a href="{% url 'detalhe_evento' evento.slug %}" class="text-primary hover:bg-primary hover:text-white p-2 rounded-full transition-all flex-shrink-0">

@@ -23,8 +23,8 @@ class EventoForm(forms.ModelForm):
             'data_fim': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'input-field'}, format='%Y-%m-%dT%H:%M'),
             'inscricoes_inicio': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'input-field'}, format='%Y-%m-%dT%H:%M'),
             'inscricoes_fim': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'input-field'}, format='%Y-%m-%dT%H:%M'),
-            'vagas': forms.NumberInput(attrs={'class': 'input-field', 'min': 0}),
-            'valor_inscricao': forms.NumberInput(attrs={'class': 'input-field', 'min': '0', 'step': '0.01', 'id': 'id_valor_inscricao'}),
+            'vagas': forms.NumberInput(attrs={'class': 'input-field', 'min': 0, 'placeholder': '0 para ilimitadas'}),
+            'valor_inscricao': forms.NumberInput(attrs={'class': 'input-field', 'min': '0', 'step': '0.01', 'id': 'id_valor_inscricao', 'placeholder': '0,00'}),
             'tipo_financeiro': forms.Select(
                 choices=[
                     (constants.MANUAL, _('Manual (PIX)')),

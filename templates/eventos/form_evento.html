@@ -22,50 +22,46 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.titulo.label }}</label>
-                    <input type="text" name="{{ form.titulo.html_name }}" id="{{ form.titulo.id_for_label }}" class="input-field" placeholder="Ex: Congresso Sinodal de Mocidade 2026" {% if form.titulo.value %}value="{{ form.titulo.value }}"{% endif %}>
+                    {{ form.titulo }}
                     {% if form.titulo.errors %}<p class="text-error text-xs font-medium">{{ form.titulo.errors.0 }}</p>{% endif %}
                 </div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.categoria.label }}</label>
-                    <select name="{{ form.categoria.html_name }}" id="{{ form.categoria.id_for_label }}" class="input-field bg-white">
-                        {% for value, label in form.categoria.field.choices %}
-                            <option value="{{ value }}" {% if form.categoria.value == value|stringformat:"i" or form.categoria.value == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
+                    {{ form.categoria }}
                     {% if form.categoria.errors %}<p class="text-error text-xs font-medium">{{ form.categoria.errors.0 }}</p>{% endif %}
                 </div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.local.label }}</label>
-                    <input type="text" name="{{ form.local.html_name }}" id="{{ form.local.id_for_label }}" class="input-field" placeholder="Ex: Garanhuns - PE" {% if form.local.value %}value="{{ form.local.value }}"{% endif %}>
+                    {{ form.local }}
                     {% if form.local.errors %}<p class="text-error text-xs font-medium">{{ form.local.errors.0 }}</p>{% endif %}
                 </div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.data_inicio.label }}</label>
-                    <input type="datetime-local" name="{{ form.data_inicio.html_name }}" id="{{ form.data_inicio.id_for_label }}" class="input-field" {% if form.data_inicio.value %}value="{{ form.data_inicio.value|date:'Y-m-d\TH:i' }}"{% endif %}>
+                    {{ form.data_inicio }}
                     {% if form.data_inicio.errors %}<p class="text-error text-xs font-medium">{{ form.data_inicio.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.data_fim.label }}</label>
-                    <input type="datetime-local" name="{{ form.data_fim.html_name }}" id="{{ form.data_fim.id_for_label }}" class="input-field" {% if form.data_fim.value %}value="{{ form.data_fim.value|date:'Y-m-d\TH:i' }}"{% endif %}>
+                    {{ form.data_fim }}
                     {% if form.data_fim.errors %}<p class="text-error text-xs font-medium">{{ form.data_fim.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.inscricoes_inicio.label }}</label>
-                    <input type="datetime-local" name="{{ form.inscricoes_inicio.html_name }}" id="{{ form.inscricoes_inicio.id_for_label }}" class="input-field" {% if form.inscricoes_inicio.value %}value="{{ form.inscricoes_inicio.value|date:'Y-m-d\TH:i' }}"{% endif %}>
+                    {{ form.inscricoes_inicio }}
                     {% if form.inscricoes_inicio.errors %}<p class="text-error text-xs font-medium">{{ form.inscricoes_inicio.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.inscricoes_fim.label }}</label>
-                    <input type="datetime-local" name="{{ form.inscricoes_fim.html_name }}" id="{{ form.inscricoes_fim.id_for_label }}" class="input-field" {% if form.inscricoes_fim.value %}value="{{ form.inscricoes_fim.value|date:'Y-m-d\TH:i' }}"{% endif %}>
+                    {{ form.inscricoes_fim }}
                     {% if form.inscricoes_fim.errors %}<p class="text-error text-xs font-medium">{{ form.inscricoes_fim.errors.0 }}</p>{% endif %}
                 </div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.vagas.label }}</label>
-                    <input type="number" name="{{ form.vagas.html_name }}" id="{{ form.vagas.id_for_label }}" class="input-field" placeholder="0 para ilimitadas" {% if form.vagas.value %}value="{{ form.vagas.value }}"{% endif %}>
+                    {{ form.vagas }}
                     <p class="text-[10px] text-text-muted italic">0 = vagas ilimitadas</p>
                     {% if form.vagas.errors %}<p class="text-error text-xs font-medium">{{ form.vagas.errors.0 }}</p>{% endif %}
                 </div>
@@ -91,13 +87,13 @@
 
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.descricao.label }}</label>
-                    <textarea name="{{ form.descricao.html_name }}" id="{{ form.descricao.id_for_label }}" rows="6" class="input-field" placeholder="Descreva os objetivos, preletores e atrações do evento...">{% if form.descricao.value %}{{ form.descricao.value }}{% endif %}</textarea>
+                    {{ form.descricao }}
                     {% if form.descricao.errors %}<p class="text-error text-xs font-medium">{{ form.descricao.errors.0 }}</p>{% endif %}
                 </div>
 
                 <div class="md:col-span-2 flex items-center gap-3 py-2">
                     <label class="flex items-center gap-3 cursor-pointer group/active">
-                        <input type="checkbox" name="{{ form.ativo.html_name }}" id="{{ form.ativo.id_for_label }}" class="w-6 h-6 rounded border-border text-primary focus:ring-primary/20 transition-all" {% if form.ativo.value %}checked{% endif %}>
+                        {{ form.ativo }}
                         <span class="text-sm font-bold text-text-main group-hover/active:text-primary transition-colors">Evento Ativo (visível para os sócios)</span>
                     </label>
                 </div>
@@ -111,7 +107,7 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-text-main block">{{ form.valor_inscricao.label }} (R$)</label>
-                    <input type="text" name="{{ form.valor_inscricao.html_name }}" id="{{ form.valor_inscricao.id_for_label }}" class="input-field" placeholder="0,00" {% if form.valor_inscricao.value %}value="{{ form.valor_inscricao.value }}"{% endif %}>
+                    {{ form.valor_inscricao }}
                     <p class="text-[10px] text-text-muted italic">Use 0 para eventos gratuitos</p>
                     {% if form.valor_inscricao.errors %}<p class="text-error text-xs font-medium">{{ form.valor_inscricao.errors.0 }}</p>{% endif %}
                 </div>
@@ -119,24 +115,20 @@
                 <!-- Tipo financeiro -->
                 <div class="space-y-2" id="tipo-financeiro-section" style="display:none">
                     <label class="text-sm font-semibold text-text-main block">{{ form.tipo_financeiro.label }}</label>
-                    <select name="{{ form.tipo_financeiro.html_name }}" id="id_tipo_financeiro" class="input-field bg-white">
-                        {% for value, label in form.tipo_financeiro.field.choices %}
-                            <option value="{{ value }}" {% if form.tipo_financeiro.value == value|stringformat:"i" or form.tipo_financeiro.value == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
+                    {{ form.tipo_financeiro }}
                     {% if form.tipo_financeiro.errors %}<p class="text-error text-xs font-medium">{{ form.tipo_financeiro.errors.0 }}</p>{% endif %}
                 </div>
 
                 <!-- Campos PIX -->
                 <div class="md:col-span-2 space-y-2" id="pix-section" style="display:none">
                     <label class="text-sm font-semibold text-text-main block">{{ form.chave_pix.label }}</label>
-                    <input type="text" name="{{ form.chave_pix.html_name }}" id="{{ form.chave_pix.id_for_label }}" class="input-field" placeholder="Chave PIX para recebimento" {% if form.chave_pix.value %}value="{{ form.chave_pix.value }}"{% endif %}>
+                    {{ form.chave_pix }}
                     {% if form.chave_pix.errors %}<p class="text-error text-xs font-medium">{{ form.chave_pix.errors.0 }}</p>{% endif %}
                 </div>
 
                 <div class="md:col-span-2 space-y-2" id="instrucoes-section" style="display:none">
                     <label class="text-sm font-semibold text-text-main block">{{ form.instrucoes_pagamento.label }}</label>
-                    <textarea name="{{ form.instrucoes_pagamento.html_name }}" id="{{ form.instrucoes_pagamento.id_for_label }}" rows="4" class="input-field" placeholder="Instruções sobre como proceder com o pagamento e envio do comprovante...">{% if form.instrucoes_pagamento.value %}{{ form.instrucoes_pagamento.value }}{% endif %}</textarea>
+                    {{ form.instrucoes_pagamento }}
                     {% if form.instrucoes_pagamento.errors %}<p class="text-error text-xs font-medium">{{ form.instrucoes_pagamento.errors.0 }}</p>{% endif %}
                 </div>
 

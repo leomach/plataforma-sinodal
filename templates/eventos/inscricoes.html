@@ -171,7 +171,17 @@
                                     </div>
                                     <div class="text-right">
                                         <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">WhatsApp</p>
-                                        <p class="text-xs text-text-main font-bold">{{ inscricao.usuario.whatsapp|default:"N/A" }}</p>
+                                        {% if inscricao.usuario.whatsapp %}
+                                        <button onclick="openWhatsAppModal('{{ inscricao.usuario.short_name|escapejs }}', '{{ inscricao.usuario.whatsapp|escapejs }}')" 
+                                                class="text-xs text-primary font-bold hover:underline flex items-center gap-1 ml-auto group">
+                                            <svg class="w-3.5 h-3.5 text-success group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.417-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.305 1.652zm6.599-3.835c1.616.959 3.197 1.445 4.922 1.446 5.4 0 9.796-4.396 9.798-9.796.001-2.617-1.02-5.077-2.876-6.932-1.857-1.856-4.318-2.876-6.935-2.877-5.403 0-9.798 4.397-9.802 9.797-.001 1.811.497 3.57 1.44 5.105l-1.004 3.666 3.754-.984zm11.233-7.51c-.131-.218-.48-.348-.999-.607-.518-.26-3.068-1.513-3.542-1.686-.474-.173-.819-.26-1.164.26-.345.52-.724.908-.95 1.167-.226.259-.452.29-.97.03-.519-.26-2.191-.809-4.173-2.578-1.542-1.375-2.583-3.073-2.885-3.59-.302-.519-.033-.799.226-1.058.233-.233.519-.606.778-.908.258-.303.344-.52.518-.865.174-.346.087-.648-.043-.907-.13-.259-1.164-2.808-1.595-3.847-.42-.974-.844-.842-1.157-.858-.299-.015-.644-.017-.99-.017-.345 0-.907.13-1.381.648-.474.52-1.812 1.772-1.812 4.324 0 2.551 1.855 5.018 2.114 5.364.259.346 3.65 5.572 8.841 7.818 1.235.534 2.199.854 2.95 1.093 1.24.394 2.369.339 3.261.206.994-.148 3.068-1.254 3.498-2.464.431-1.21.431-2.25.302-2.467z"/>
+                                            </svg>
+                                            {{ inscricao.usuario.whatsapp }}
+                                        </button>
+                                        {% else %}
+                                        <p class="text-xs text-text-muted font-bold italic">N/A</p>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -193,7 +203,138 @@
     </div>
 </div>
 
+<!-- Modal WhatsApp -->
+<div id="whatsapp-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-surface w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div class="p-6 border-b border-border flex justify-between items-center bg-primary text-white">
+            <h3 class="font-bold text-xl serif-title">Enviar Mensagem</h3>
+            <button type="button" onclick="closeWhatsAppModal()" class="text-white/80 hover:text-white text-3xl leading-none">&times;</button>
+        </div>
+        <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div class="bg-surface-hover p-4 rounded-xl border border-border shadow-inner">
+                <p class="text-[10px] text-text-muted uppercase font-bold tracking-widest mb-1">Destinatário</p>
+                <p class="text-lg font-bold text-text-main" id="wa-recipient-name"></p>
+                <p class="text-sm text-primary font-medium flex items-center gap-1">
+                    <svg class="w-4 h-4 text-success" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    <span id="wa-recipient-phone"></span>
+                </p>
+            </div>
+            
+            <div class="space-y-4">
+                <h4 class="text-xs font-bold text-text-muted uppercase tracking-[0.2em] flex items-center gap-2">
+                    <span class="w-8 h-px bg-border"></span>
+                    Escolha um modelo
+                    <span class="flex-grow h-px bg-border"></span>
+                </h4>
+                
+                <div class="space-y-6">
+                    <!-- 1. Inscrição e Credenciais -->
+                    <div class="space-y-3">
+                        <p class="text-[10px] font-black text-primary uppercase tracking-widest border-l-2 border-primary pl-2">Inscrição e Credenciais</p>
+                        <button onclick="sendWA('credencial_pendente')" class="wa-btn group p-2 mb-1" style="white-space: normal; border: 1px solid #e0e0e0; border-radius: 12px;">
+                            <p class="wa-btn-title group-hover:text-primary">Aviso de Credencial Pendente</p>
+                            <p class="wa-btn-desc">"Graça e paz... vi que você se inscreveu como Delegado, mas o link do Drive... está pendente."</p>
+                        </button>
+                        <button onclick="sendWA('inscricao_aprovada')" class="wa-btn group p-2 mb-1" style="white-space: normal; border: 1px solid #e0e0e0; border-radius: 12px;">
+                            <p class="wa-btn-title group-hover:text-primary">Inscrição Aprovada (Delegado)</p>
+                            <p class="wa-btn-desc">"Graça e paz... Passo para avisar que sua credencial foi validada e sua inscrição... está 100% aprovada."</p>
+                        </button>
+                    </div>
+                    
+                    <!-- 2. Logística e Recepção -->
+                    <div class="space-y-3">
+                        <p class="text-[10px] font-black text-tertiary uppercase tracking-widest border-l-2 border-tertiary pl-2">Logística e Recepção</p>
+                        <button onclick="sendWA('duvidas')" class="wa-btn group p-2 mb-1" style="white-space: normal; border: 1px solid #e0e0e0; border-radius: 12px;">
+                            <p class="wa-btn-title group-hover:text-tertiary">Dúvidas Pré-Evento</p>
+                            <p class="wa-btn-desc">"Graça e paz... Falta pouco para o {evento}! Estou passando para saber se você tem alguma dúvida..."</p>
+                        </button>
+                        <button onclick="sendWA('checkin')" class="wa-btn group p-2 mb-1" style="white-space: normal; border: 1px solid #e0e0e0; border-radius: 12px;">
+                            <p class="wa-btn-title group-hover:text-tertiary">Check-in / Chegada</p>
+                            <p class="wa-btn-desc">"Olá... Já estamos com a recepção aberta para o {evento}. Assim que chegar, dê um toque..."</p>
+                        </button>
+                    </div>
+
+                    <!-- 3. Financeiras -->
+                    <div class="space-y-3">
+                        <p class="text-[10px] font-black text-warning uppercase tracking-widest border-l-2 border-warning pl-2">Financeiro</p>
+                        <button onclick="sendWA('lembrete_pagamento')" class="wa-btn group p-2 mb-1" style="white-space: normal; border: 1px solid #e0e0e0; border-radius: 12px;">
+                            <p class="wa-btn-title group-hover:text-warning">Lembrete de Pagamento</p>
+                            <p class="wa-btn-desc">"Graça e paz... vi que sua inscrição foi gerada, mas ainda está aguardando pagamento."</p>
+                        </button>
+                        <button onclick="sendWA('confirmacao_pagamento')" class="wa-btn group p-2 mb-1" style="white-space: normal; border: 1px solid #e0e0e0; border-radius: 12px;">
+                            <p class="wa-btn-title group-hover:text-warning">Confirmação de Pagamento</p>
+                            <p class="wa-btn-desc">"Graça e paz... Passando para confirmar que já recebemos o pagamento da sua inscrição..."</p>
+                        </button>
+                    </div>
+
+                    <!-- 4. Acolhimento -->
+                    <div class="space-y-3">
+                        <p class="text-[10px] font-black text-secondary uppercase tracking-widest border-l-2 border-secondary pl-2">Acolhimento</p>
+                        <button onclick="sendWA('boas_vindas')" class="wa-btn group p-2 mb-1" style="white-space: normal; border: 1px solid #e0e0e0; border-radius: 12px;">
+                            <p class="wa-btn-title group-hover:text-secondary">Boas-vindas Gerais</p>
+                            <p class="wa-btn-desc">"Graça e paz... Ficamos muito felizes em ver o seu nome na lista de inscritos do {evento}."</p>
+                        </button>
+                        <button onclick="sendWA('ausencia')" class="wa-btn group p-2 mb-1" style="white-space: normal; border: 1px solid #e0e0e0; border-radius: 12px;">
+                            <p class="wa-btn-title group-hover:text-secondary">Ausência Notada (Pós-evento)</p>
+                            <p class="wa-btn-desc">"Graça e paz... Sentimos sua falta no {evento}! Esperamos que esteja tudo bem..."</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-border flex justify-end bg-surface-hover">
+            <button type="button" onclick="closeWhatsAppModal()" class="btn-outline px-8 border-none text-text-muted hover:text-text-main">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    let currentRecipient = { name: '', phone: '' };
+    const eventTitle = "{{ evento.titulo|escapejs }}";
+
+    const waTemplates = {
+        credencial_pendente: "Graça e paz, {nome}! Tudo bem? Aqui é da organização da Sinodal. Vi que você se inscreveu como Delegado no {evento}, mas o link do Drive com sua credencial assinada ainda está pendente. Consegue me enviar ou atualizar lá no sistema? Qualquer dúvida, estou à disposição!",
+        inscricao_aprovada: "Graça e paz, {nome}! Passo para avisar que sua credencial foi validada e sua inscrição como Delegado está 100% aprovada. Você já pode acessar o 'Hub do Delegado' no site para ler os relatórios do nosso evento. Nos vemos lá!",
+        duvidas: "Graça e paz, {nome}! Falta pouco para o {evento}! Estou passando para saber se você tem alguma dúvida sobre o local, horários ou o que levar. Estamos preparando tudo com muito carinho para receber você!",
+        checkin: "Olá, {nome}! Já estamos com a recepção aberta para o {evento}. Assim que chegar, dê um toque ou procure nossa equipe na entrada para liberar seu acesso. Boa viagem!",
+        lembrete_pagamento: "Graça e paz, {nome}! Estou ajudando na organização do {evento} e vi que sua inscrição foi gerada, mas ainda está aguardando pagamento. Teve alguma dificuldade com o PIX ou com o sistema? Me avisa que te ajudo!",
+        confirmacao_pagamento: "Graça e paz, {nome}! Passando para confirmar que já recebemos o pagamento da sua inscrição para o {evento}. Muito obrigado pela agilidade, nos vemos no evento!",
+        boas_vindas: "Graça e paz, {nome}! Ficamos muito felizes em ver o seu nome na lista de inscritos do {evento}. Estamos orando por você e pela sua UMP local. Que tenhamos dias muito abençoados juntos!",
+        ausencia: "Graça e paz, {nome}. Sentimos sua falta no {evento}! Esperamos que esteja tudo bem com você e sua família. Continuamos firmes e 'Alegres na Esperança', conte com as nossas orações!"
+    };
+
+    function openWhatsAppModal(name, phone) {
+        currentRecipient = { name, phone };
+        document.getElementById('wa-recipient-name').innerText = name;
+        document.getElementById('wa-recipient-phone').innerText = phone;
+        document.getElementById('whatsapp-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeWhatsAppModal() {
+        document.getElementById('whatsapp-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function sendWA(templateKey) {
+        let message = waTemplates[templateKey];
+        message = message.replace(/{nome}/g, currentRecipient.name);
+        message = message.replace(/{evento}/g, eventTitle);
+        
+        // Clean phone number (remove everything except numbers)
+        const cleanPhone = currentRecipient.phone.replace(/\D/g, '');
+        
+        // Add country code if missing (BR 55)
+        let finalPhone = cleanPhone;
+        if (finalPhone.length === 10 || finalPhone.length === 11) {
+            finalPhone = '55' + finalPhone;
+        }
+
+        const url = `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+        closeWhatsAppModal();
+    }
+
     function toggleDetails(id, btn) {
         const row = document.getElementById(id);
         const icon = btn.querySelector('svg');
@@ -208,4 +349,13 @@
         }
     }
 </script>
+
+<style>
+    .wa-btn { @apply w-full text-left p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-surface-hover transition-all text-sm; }
+    .wa-btn-title { @apply font-bold text-text-main mb-0.5 transition-colors; }
+    .wa-btn-desc { @apply text-[10px] text-text-muted line-clamp-1 italic; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { @apply bg-transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+</style>
 {% endblock %}
