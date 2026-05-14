@@ -36,14 +36,14 @@
 
                 <div class="space-y-2" id="credential-field">
                     <label for="{{ form.credential_url.id_for_label }}" class="text-sm font-semibold text-text-main block">{{ form.credential_url.label }}</label>
-                    <input type="url" name="{{ form.credential_url.html_name }}" id="{{ form.credential_url.id_for_label }}" class="input-field" placeholder="https://drive.google.com/..." {% if form.credential_url.value %}value="{{ form.credential_url.value }}"{% endif %}>
+                    {{ form.credential_url }}
                     <p class="text-[10px] text-text-muted leading-tight">Link do Google Drive com a foto/PDF da credencial assinada.</p>
                     {% if form.credential_url.errors %}<p class="text-error text-xs font-medium">{{ form.credential_url.errors.0 }}</p>{% endif %}
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
                     <label for="{{ form.observacoes.id_for_label }}" class="text-sm font-semibold text-text-main block">{{ form.observacoes.label }}</label>
-                    <textarea name="{{ form.observacoes.html_name }}" id="{{ form.observacoes.id_for_label }}" rows="3" class="input-field" placeholder="Alguma observação importante para a organização?">{% if form.observacoes.value %}{{ form.observacoes.value }}{% endif %}</textarea>
+                    {{ form.observacoes }}
                     {% if form.observacoes.errors %}<p class="text-error text-xs font-medium">{{ form.observacoes.errors.0 }}</p>{% endif %}
                 </div>
             </div>
