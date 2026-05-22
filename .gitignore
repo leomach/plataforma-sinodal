@@ -30,3 +30,4 @@ env/
 
 # Others
 cli/
+restore_db.sh
