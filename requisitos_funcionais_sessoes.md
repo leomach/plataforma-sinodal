@@ -1,11 +1,11 @@
 # Requisitos Funcionais das Sessões dos Eventos
 
 O GTSI estabelece que o congresso ou CE é composto por sessões.
-RF01: O sistema deve permitir que o administrador crie blocos de horários chamados "Sessões" (Ex: Sessão 1, Sessão 2, Sessão de Encerramento).
-RF02: O sistema deve ter uma marcação simples para identificar qual é a "Sessão de Verificação de Poderes" (que obrigatoriamente é a primeira do evento)
+RF01: O sistema deve permitir que o administrador crie blocos de horários chamados "Sessões" (Ex: Sessão 1, Sessão 2, Sessão de Encerramento) que é marcada inicialmente como "Em Breve" (indicando que vai haver) e com a possibilidade de mudança manual para algo como "Chamada" (para o momento em que está sendo feita a presença de cada delegado), "Aberta" (abertura oficial da sessão) ou "Encerrada" (quando a sessão acaba).
+RF02: O sistema deve ter uma marcação simples para identificar qual é a "Sessão de Verificação de Poderes" (que obrigatoriamente é a primeira do evento).
 
 A regra exige que as votações não aconteçam sem quórum legal (mais da metade dos delegados)
-RF03: Na página de cada Sessão, o sistema deve exibir a lista de todos os usuários com o status de "Delegado Aprovado". O Secretário (você) apenas clica em uma caixa de seleção (checkbox) para marcar quem está presente.
+RF03: É feita a presença dos presentes por meio do crachá digital descrito mais a frente nesse documento.
 RF04: O sistema calcula automaticamente se os presentes representam mais da metade da delegação esperada e exibe um aviso visual verde: "Quórum Atingido"
 
 Requisito Funcional (RF) para Votação:
@@ -20,6 +20,7 @@ Abertura e Quórum: "14:00 - Sessão iniciada com 45 delegados (Quórum atingido
 Entrada/Saída: Se um delegado marca que precisou sair, gera o log: "14:30 - Delegado João saiu do plenário"
 Resultado de Votações: "15:00 - Proposta X aprovada por 30 votos a favor e 15 contra".
 O Secretário terá um campo para inserir "Registros Manuais" rápidos na linha do tempo (Ex: "15:15 - Oração feita pelo Rev. Carlos")
+Entre outras informações possivelmente importantes para registro em ata.
 
 ## Presenças integradas a sessão
 

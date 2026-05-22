@@ -26,3 +26,8 @@ env/
 # Poetry
 .venv
 .poetry
+
+
+# Others
+cli/
+restore_db.sh
