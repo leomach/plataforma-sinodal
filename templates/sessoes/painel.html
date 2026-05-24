@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}Painel — {{ sessao.nome }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
+        <div>
+            <a href="{% url 'lista_sessoes' evento.slug %}" class="text-xs text-[#64748B] hover:text-[#1D4ED8] font-medium uppercase tracking-widest flex items-center gap-1 mb-2">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                {{ evento.titulo }}
+            </a>
+            <div class="flex flex-wrap items-center gap-3">
+                <h1 class="text-2xl font-bold text-[#0F172A] serif-title">{{ sessao.nome }}</h1>
+                {% if sessao.is_verificacao_poderes %}
+                <span class="text-[10px] font-bold text-[#1D4ED8] bg-[#1D4ED8]/10 border border-[#1D4ED8]/30 px-2 py-0.5 rounded-full uppercase tracking-wider">Verificação de Poderes</span>
+                {% endif %}
+            </div>
+            <p class="text-sm text-[#64748B] mt-1">{{ sessao.data_hora|date:"d/m/Y" }} às {{ sessao.data_hora|date:"H:i" }}</p>
+        </div>
+        {% if sessao.status != 4 %}
+        <a href="{% url 'editar_sessao' evento.slug sessao.pk %}" class="text-xs font-bold text-[#64748B] hover:text-[#0F172A] border border-[#E2E8F0] px-4 py-2 rounded-lg transition-all">
+            Editar
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- COLUNA ESQUERDA: Controles da Sessão -->
+        <div class="space-y-5">
+
+            <!-- Status e controles -->
+            <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-5">
+                <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest mb-4">Status da Sessão</p>
+
+                <!-- Badge de status -->
+                <div class="mb-4">
+                    {% if sessao.status == 1 %}
+                    <div class="flex items-center gap-2 p-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg">
+                        <div class="w-3 h-3 rounded-full bg-[#94A3B8]"></div>
+                        <span class="font-bold text-[#64748B]">Em Breve</span>
+                    </div>
+                    {% elif sessao.status == 2 %}
+                    <div class="flex items-center gap-2 p-3 bg-[#1D4ED8]/10 border border-[#1D4ED8]/30 rounded-lg">
+                        <div class="w-3 h-3 rounded-full bg-[#1D4ED8] animate-pulse"></div>
+                        <span class="font-bold text-[#1D4ED8]">Chamada em Andamento</span>
+                    </div>
+                    {% elif sessao.status == 3 %}
+                    <div class="flex items-center gap-2 p-3 bg-[#00703C]/10 border border-[#00703C]/30 rounded-lg">
+                        <div class="w-3 h-3 rounded-full bg-[#00703C]"></div>
+                        <span class="font-bold text-[#00703C]">Sessão Aberta</span>
+                    </div>
+                    {% else %}
+                    <div class="flex items-center gap-2 p-3 bg-[#0F172A]/5 border border-[#0F172A]/20 rounded-lg">
+                        <div class="w-3 h-3 rounded-full bg-[#0F172A]"></div>
+                        <span class="font-bold text-[#0F172A]">Sessão Encerrada</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Botões de transição -->
+                {% if proxima_transicao %}
+                {% with novo_status=proxima_transicao.0 label=proxima_transicao.1 %}
+                <form method="post" action="{% url 'alterar_status_sessao' evento.slug sessao.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="avancar">
+                    <button type="submit"
+                        class="w-full font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm mb-2
+                        {% if novo_status == 2 %}bg-[#1D4ED8] hover:bg-blue-800 text-white
+                        {% elif novo_status == 3 %}bg-[#00703C] hover:bg-green-800 text-white
+                        {% else %}bg-[#0F172A] hover:bg-slate-800 text-white{% endif %}"
+                        onclick="return confirm('Confirmar: {{ label }}?')">
+                        {{ label }}
+                    </button>
+                </form>
+                {% endwith %}
+                {% endif %}
+
+                {% if sessao.pode_retroceder %}
+                <form method="post" action="{% url 'alterar_status_sessao' evento.slug sessao.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="retroceder">
+                    <button type="submit" class="w-full font-bold py-2 rounded-lg text-xs uppercase tracking-widest text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9] transition-all"
+                        onclick="return confirm('Cancelar a chamada?')">
+                        Cancelar Chamada
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if sessao.status in "23" %}
+                <a href="{% url 'leitor_presenca' evento.slug sessao.pk %}" class="mt-3 flex items-center justify-center gap-2 w-full border border-[#00703C] text-[#00703C] hover:bg-[#00703C] hover:text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-widest transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4a8 8 0 100 16A8 8 0 0012 4zm0 0v4m0 8v-4m0 0h4m-4 0H8"/></svg>
+                    Leitor de Presença
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Quórum (com HTMX polling) -->
+            <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-5">
+                <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest mb-3">Quórum</p>
+                <div
+                    id="quorum-container"
+                    hx-get="{% url 'contagem_presenca' evento.slug sessao.pk %}"
+                    hx-trigger="every 3s"
+                    hx-swap="innerHTML"
+                >
+                    {% include "sessoes/partials/quorum.html" %}
+                </div>
+            </div>
+
+            <!-- Mesa Diretora -->
+            <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest">Mesa Diretora</p>
+                    {% if sessao.status != 4 %}
+                    <a href="{% url 'compor_mesa' evento.slug sessao.pk %}"
+                        class="text-xs font-bold text-[#1D4ED8] hover:text-blue-800 uppercase tracking-widest">
+                        {% if mesa_atual %}Editar{% else %}Compor{% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+
+                {% if mesa_atual or membros_extras %}
+                <ul class="space-y-3 mb-4">
+                    {% for m in mesa_atual %}
+                    <li class="flex items-center justify-between gap-2">
+                        <div>
+                            <p class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-wider">{{ m.cargo_label }}</p>
+                            <p class="text-sm font-semibold text-[#0F172A]">{{ m.inscricao.usuario.get_full_name|default:m.inscricao.usuario.username }}</p>
+                        </div>
+                        {% if m.cargo == 1 %}
+                        <span class="text-[9px] font-bold text-[#1D4ED8] bg-[#1D4ED8]/10 border border-[#1D4ED8]/20 px-2 py-0.5 rounded-full uppercase shrink-0">Presidente</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                    {% for e in membros_extras %}
+                    <li class="flex items-center justify-between gap-2">
+                        <div>
+                            <p class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-wider">{{ e.cargo_descricao }}</p>
+                            <p class="text-sm font-semibold text-[#0F172A]">{{ e.nome }}</p>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% if transferir_form and sessao.status != 4 %}
+                <button onclick="document.getElementById('modal-transferir').classList.remove('hidden')"
+                    class="w-full border border-[#E2E8F0] text-[#64748B] hover:bg-[#F1F5F9] font-bold py-2 rounded-lg text-xs uppercase tracking-widest transition-all">
+                    Transferir Presidência
+                </button>
+                {% endif %}
+                {% else %}
+                <p class="text-xs text-[#64748B] italic text-center py-2 mb-3">Mesa não composta ainda.</p>
+                {% if sessao.status != 4 %}
+                <a href="{% url 'compor_mesa' evento.slug sessao.pk %}"
+                    class="flex items-center justify-center gap-2 w-full border border-[#1D4ED8] text-[#1D4ED8] hover:bg-[#1D4ED8] hover:text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-widest transition-all">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Compor Mesa
+                </a>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- COLUNA CENTRAL: Votações -->
+        <div class="space-y-5">
+            <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest">Votações</p>
+                    {% if sessao.status == 3 and not votacao_aberta and not votacao_empatada %}
+                    <button onclick="document.getElementById('modal-nova-votacao').classList.remove('hidden')"
+                        class="flex items-center gap-1 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs uppercase tracking-widest transition-all">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Nova
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Votação ativa ou empatada -->
+                {% if votacao_aberta %}
+                <div class="border border-[#1D4ED8]/30 bg-[#1D4ED8]/5 rounded-lg p-4 mb-4">
+                    <div class="flex items-start justify-between gap-2 mb-3">
+                        <div>
+                            <span class="text-[9px] font-bold text-[#1D4ED8] uppercase">Em votação</span>
+                            <p class="font-semibold text-[#0F172A] text-sm mt-0.5">{{ votacao_aberta.titulo }}</p>
+                        </div>
+                    </div>
+                    <!-- Contagem em tempo real -->
+                    <div id="resultado-votacao-{{ votacao_aberta.pk }}"
+                        hx-get="{% url 'resultado_votacao' evento.slug sessao.pk votacao_aberta.pk %}"
+                        hx-trigger="every 3s"
+                        hx-swap="innerHTML">
+                        {% include "sessoes/partials/resultado_votacao.html" with votacao=votacao_aberta contagem=votacao_aberta.contagem %}
+                    </div>
+                    <form method="post" action="{% url 'encerrar_votacao' evento.slug sessao.pk votacao_aberta.pk %}" class="mt-4">
+                        {% csrf_token %}
+                        <button type="submit" onclick="return confirm('Encerrar a votação?')"
+                            class="w-full bg-[#0F172A] hover:bg-slate-700 text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-widest transition-all">
+                            Encerrar Votação
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                {% if votacao_empatada %}
+                <div class="border border-[#F59E0B]/40 bg-[#FEF9C3] rounded-lg p-4 mb-4">
+                    <span class="text-[9px] font-bold text-[#D97706] uppercase">Empate — Voto de Minerva</span>
+                    <p class="font-semibold text-[#0F172A] text-sm mt-0.5 mb-3">{{ votacao_empatada.titulo }}</p>
+                    {% with c=votacao_empatada.contagem %}
+                    <p class="text-xs text-[#64748B] mb-3">{{ c.favor }} a favor / {{ c.contra }} contra / {{ c.abstencoes }} abstenções</p>
+                    {% endwith %}
+                    {% if can_vote_minerva %}
+                    <div class="flex gap-2">
+                        <form method="post" action="{% url 'voto_minerva' evento.slug sessao.pk votacao_empatada.pk %}" class="flex-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="voto_minerva" value="favor">
+                            <button type="submit" onclick="return confirm('Registrar Voto de Minerva A FAVOR?')"
+                                class="w-full bg-[#00703C] hover:bg-green-800 text-white font-bold py-2 rounded-lg text-xs uppercase tracking-widest transition-all">
+                                A Favor
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'voto_minerva' evento.slug sessao.pk votacao_empatada.pk %}" class="flex-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="voto_minerva" value="contra">
+                            <button type="submit" onclick="return confirm('Registrar Voto de Minerva CONTRA?')"
+                                class="w-full bg-[#DC2626] hover:bg-red-800 text-white font-bold py-2 rounded-lg text-xs uppercase tracking-widest transition-all">
+                                Contra
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="p-3 bg-white/60 border border-[#F59E0B]/30 rounded-lg text-center">
+                        <p class="text-xs text-[#92400E]">Aguardando Voto de Minerva do Presidente da Mesa.</p>
+                        {% if presidente_atual %}
+                        <p class="text-xs font-bold text-[#0F172A] mt-1">
+                            {{ presidente_atual.inscricao.usuario.get_full_name|default:presidente_atual.inscricao.usuario.username }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Histórico de votações -->
+                {% for v in votacoes %}
+                {% if v.status == 3 %}
+                <div class="border border-[#E2E8F0] rounded-lg p-3 mb-2 {% if v.resultado == 1 %}bg-[#F0FDF4]{% else %}bg-[#FEF2F2]{% endif %}">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-medium text-[#0F172A] truncate flex-1 mr-2">{{ v.titulo }}</p>
+                        {% if v.resultado == 1 %}
+                        <span class="text-[9px] font-bold text-[#00703C] bg-[#00703C]/10 border border-[#00703C]/20 px-2 py-0.5 rounded-full uppercase shrink-0">Aprovada</span>
+                        {% else %}
+                        <span class="text-[9px] font-bold text-[#DC2626] bg-[#DC2626]/10 border border-[#DC2626]/20 px-2 py-0.5 rounded-full uppercase shrink-0">Rejeitada</span>
+                        {% endif %}
+                    </div>
+                    {% with c=v.contagem %}
+                    <p class="text-[10px] text-[#64748B] mt-1">{{ c.favor }}F / {{ c.contra }}C / {{ c.abstencoes }}A{% if v.voto_minerva_favor is not None %} — Minerva{% endif %}</p>
+                    {% endwith %}
+                </div>
+                {% endif %}
+                {% empty %}
+                <p class="text-xs text-[#64748B] italic text-center py-4">Nenhuma votação nesta sessão.</p>
+                {% endfor %}
+
+                {% if sessao.status != 3 and not votacao_aberta and not votacao_empatada %}
+                <p class="text-xs text-[#64748B] italic text-center py-2">
+                    {% if sessao.status == 4 %}Sessão encerrada.{% else %}Sessão deve estar Aberta para criar votações.{% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- COLUNA DIREITA: Linha do Tempo -->
+        <div class="space-y-5">
+            <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest">Linha do Tempo</p>
+                    <a href="{% url 'exportar_log' evento.slug sessao.pk %}?modal=1"
+                        hx-get="{% url 'exportar_log' evento.slug sessao.pk %}?modal=1"
+                        hx-target="#modal-exportar"
+                        hx-swap="innerHTML"
+                        onclick="document.getElementById('modal-exportar-wrapper').classList.remove('hidden')"
+                        class="text-xs font-bold text-[#1D4ED8] hover:text-blue-800 uppercase tracking-widest">
+                        Exportar
+                    </a>
+                </div>
+
+                <!-- Formulário de registro manual -->
+                {% if sessao.status != 4 %}
+                <form method="post" action="{% url 'adicionar_log_manual' evento.slug sessao.pk %}" class="mb-5">
+                    {% csrf_token %}
+                    <textarea
+                        name="descricao"
+                        rows="2"
+                        placeholder="Adicionar registro manual..."
+                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8] transition-all resize-none mb-2"
+                    ></textarea>
+                    <button type="submit" class="w-full bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F172A] font-bold py-2 rounded-lg text-xs uppercase tracking-widest transition-all border border-[#E2E8F0]">
+                        Adicionar Registro
+                    </button>
+                </form>
+                {% endif %}
+
+                <!-- Feed do log (mais recente no topo) -->
+                <div class="space-y-3 max-h-[500px] overflow-y-auto">
+                    {% for log in logs %}
+                    <div class="flex gap-3 group">
+                        <div class="flex flex-col items-center">
+                            <div class="w-2 h-2 rounded-full mt-1.5 shrink-0 {% if log.tipo == 1 %}bg-[#1D4ED8]{% else %}bg-[#94A3B8]{% endif %}"></div>
+                            {% if not forloop.last %}<div class="w-px flex-1 bg-[#E2E8F0] mt-1"></div>{% endif %}
+                        </div>
+                        <div class="flex-1 pb-3">
+                            <div class="flex items-center gap-2 mb-0.5">
+                                <span class="text-[9px] font-bold uppercase tracking-wider {% if log.tipo == 1 %}text-[#1D4ED8]{% else %}text-[#64748B]{% endif %}">
+                                    {% if log.tipo == 1 %}Sistema{% else %}Manual{% endif %}
+                                </span>
+                                <span class="text-[10px] text-[#94A3B8]">{{ log.timestamp|date:"H:i" }}</span>
+                            </div>
+                            <p class="text-sm text-[#0F172A] leading-snug">{{ log.descricao }}</p>
+                            {% if log.tipo == 2 %}
+                            <form method="post" action="{% url 'excluir_log_manual' evento.slug sessao.pk log.pk %}" class="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {% csrf_token %}
+                                <button type="submit" onclick="return confirm('Excluir este registro?')"
+                                    class="text-[9px] font-bold text-[#DC2626] uppercase tracking-widest hover:underline">
+                                    Excluir
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-[#64748B] italic text-center py-4">Nenhum registro ainda.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nova Votação -->
+<div id="modal-nova-votacao" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="font-bold text-lg text-[#0F172A] serif-title">Nova Votação</h2>
+            <button onclick="document.getElementById('modal-nova-votacao').classList.add('hidden')" class="text-[#94A3B8] hover:text-[#0F172A]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form method="post" action="{% url 'criar_votacao' evento.slug sessao.pk %}">
+            {% csrf_token %}
+            <label class="block text-xs font-bold text-[#0F172A] uppercase tracking-widest mb-2">Proposta / Título</label>
+            <textarea name="titulo" rows="3" required
+                placeholder="Descreva a proposta a ser votada..."
+                class="w-full border border-[#E2E8F0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8] transition-all mb-4 resize-none"></textarea>
+            <div class="flex gap-3">
+                <button type="submit" class="flex-1 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all">
+                    Abrir Votação
+                </button>
+                <button type="button" onclick="document.getElementById('modal-nova-votacao').classList.add('hidden')"
+                    class="px-6 border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] font-bold rounded-lg text-xs uppercase tracking-widest transition-all">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Transferir Presidência -->
+{% if transferir_form %}
+<div id="modal-transferir" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="font-bold text-lg text-[#0F172A] serif-title">Transferir Presidência</h2>
+            <button onclick="document.getElementById('modal-transferir').classList.add('hidden')" class="text-[#94A3B8] hover:text-[#0F172A]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        {% if presidente_atual %}
+        <p class="text-sm text-[#64748B] mb-4">
+            Presidente atual:
+            <strong class="text-[#0F172A]">{{ presidente_atual.inscricao.usuario.get_full_name|default:presidente_atual.inscricao.usuario.username }}</strong>
+        </p>
+        {% endif %}
+        <form method="post" action="{% url 'transferir_presidencia' evento.slug sessao.pk %}">
+            {% csrf_token %}
+            <label class="block text-xs font-bold text-[#0F172A] uppercase tracking-widest mb-2">{{ transferir_form.novo_presidente.label }}</label>
+            {{ transferir_form.novo_presidente }}
+            <div class="flex gap-3 mt-5">
+                <button type="submit" onclick="return confirm('Confirmar transferência de presidência?')"
+                    class="flex-1 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all">
+                    Confirmar
+                </button>
+                <button type="button" onclick="document.getElementById('modal-transferir').classList.add('hidden')"
+                    class="px-6 border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] font-bold rounded-lg text-xs uppercase tracking-widest transition-all">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal: Exportar Log -->
+<div id="modal-exportar-wrapper" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6 max-h-[80vh] flex flex-col">
+        <div class="flex items-center justify-between mb-5 shrink-0">
+            <h2 class="font-bold text-lg text-[#0F172A] serif-title">Exportar Linha do Tempo</h2>
+            <button onclick="document.getElementById('modal-exportar-wrapper').classList.add('hidden')" class="text-[#94A3B8] hover:text-[#0F172A]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div id="modal-exportar" class="flex-1 overflow-y-auto"></div>
+    </div>
+</div>
+{% endblock %}

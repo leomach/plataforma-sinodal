@@ -1050,6 +1050,17 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<8)"]
 
 [[package]]
+name = "segno"
+version = "1.6.6"
+description = "QR Code and Micro QR Code generator for Python"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "segno-1.6.6-py3-none-any.whl", hash = "sha256:28c7d081ed0cf935e0411293a465efd4d500704072cdb039778a2ab8736190c7"},
+    {file = "segno-1.6.6.tar.gz", hash = "sha256:e60933afc4b52137d323a4434c8340e0ce1e58cec71439e46680d4db188f11b3"},
+]
+
+[[package]]
 name = "sentry-sdk"
 version = "2.59.0"
 description = "Python client for Sentry (https://sentry.io)"
@@ -1237,4 +1248,4 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "da02f6412be4f05f7426de8af62dda088a5630028cfcad14ad2df8ed0d065743"
+content-hash = "6b1e3b223411ac72cece89fde1e7005d6c1816c21054a23db9b9d6fd8675ea22"

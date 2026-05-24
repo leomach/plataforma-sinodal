@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Sessões — {{ evento.titulo }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div>
+            <a href="{% url 'hub_evento' evento.slug %}" class="text-xs text-[#64748B] hover:text-[#1D4ED8] font-medium uppercase tracking-widest mb-2 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                {{ evento.titulo }}
+            </a>
+            <h1 class="text-2xl font-bold text-[#0F172A] serif-title">Sessões do Evento</h1>
+        </div>
+        <a href="{% url 'criar_sessao' evento.slug %}" class="flex items-center gap-2 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-2.5 px-5 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Nova Sessão
+        </a>
+    </div>
+
+    {% if sessao_ativa %}
+    <div class="mb-6 p-4 bg-[#00703C]/10 border border-[#00703C]/30 rounded-lg flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <span class="text-xs font-bold text-[#00703C] uppercase tracking-widest">Sessão Ativa</span>
+            <p class="font-bold text-[#0F172A]">{{ sessao_ativa.nome }} — {{ sessao_ativa.get_status_display }}</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'leitor_presenca' evento.slug sessao_ativa.pk %}" class="flex items-center gap-1 bg-[#00703C] hover:bg-green-800 text-white font-bold py-2 px-4 rounded-lg text-xs uppercase tracking-widest transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4a8 8 0 100 16A8 8 0 0012 4zm0 0v4m0 8v-4m0 0h4m-4 0H8"/></svg>
+                Leitor de Presença
+            </a>
+            <a href="{% url 'painel_sessao' evento.slug sessao_ativa.pk %}" class="flex items-center gap-1 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg text-xs uppercase tracking-widest transition-all">
+                Painel
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm overflow-hidden">
+        {% if sessoes %}
+        <table class="w-full text-sm">
+            <thead class="bg-[#F1F5F9] border-b border-[#E2E8F0]">
+                <tr>
+                    <th class="text-left px-5 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wider">Sessão</th>
+                    <th class="text-left px-5 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wider hidden md:table-cell">Data/Hora</th>
+                    <th class="text-left px-5 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wider">Status</th>
+                    <th class="text-left px-5 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wider hidden lg:table-cell">Votações</th>
+                    <th class="px-5 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E2E8F0]">
+                {% for sessao in sessoes %}
+                <tr class="hover:bg-[#F8FAFC] transition-colors">
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-2">
+                            <span class="font-semibold text-[#0F172A]">{{ sessao.nome }}</span>
+                            {% if sessao.is_verificacao_poderes %}
+                            <span class="text-[9px] font-bold text-[#1D4ED8] border border-[#1D4ED8]/30 bg-[#1D4ED8]/5 px-1.5 py-0.5 rounded uppercase">VP</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-5 py-4 text-[#64748B] hidden md:table-cell">{{ sessao.data_hora|date:"d/m/Y H:i" }}</td>
+                    <td class="px-5 py-4">
+                        {% if sessao.status == 1 %}
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-[#64748B] bg-[#F1F5F9] border border-[#E2E8F0] px-2 py-1 rounded-full uppercase">Em Breve</span>
+                        {% elif sessao.status == 2 %}
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-[#1D4ED8] bg-[#1D4ED8]/10 border border-[#1D4ED8]/20 px-2 py-1 rounded-full uppercase">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#1D4ED8] animate-pulse"></span>Chamada
+                        </span>
+                        {% elif sessao.status == 3 %}
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-[#00703C] bg-[#00703C]/10 border border-[#00703C]/20 px-2 py-1 rounded-full uppercase">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#00703C]"></span>Aberta
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-[#0F172A] border border-[#0F172A] px-2 py-1 rounded-full uppercase">Encerrada</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-4 text-[#64748B] hidden lg:table-cell">{{ sessao.votacoes_count }}</td>
+                    <td class="px-5 py-4">
+                        <a href="{% url 'painel_sessao' evento.slug sessao.pk %}" class="text-xs font-bold text-[#1D4ED8] hover:text-blue-800 uppercase tracking-widest">Painel →</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="py-16 text-center">
+            <p class="text-[#64748B] text-sm italic mb-4">Nenhuma sessão cadastrada ainda.</p>
+            <a href="{% url 'criar_sessao' evento.slug %}" class="inline-flex items-center gap-2 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-2.5 px-5 rounded-lg text-xs uppercase tracking-widest transition-all">
+                Criar Primeira Sessão
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

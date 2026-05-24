@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}{% if modo == 'editar' %}Editar{% else %}Nova{% endif %} Sessão — {{ evento.titulo }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{% url 'lista_sessoes' evento.slug %}" class="text-xs text-[#64748B] hover:text-[#1D4ED8] font-medium uppercase tracking-widest flex items-center gap-1 mb-2">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Sessões
+        </a>
+        <h1 class="text-2xl font-bold text-[#0F172A] serif-title">
+            {% if modo == 'editar' %}Editar Sessão{% else %}Nova Sessão{% endif %}
+        </h1>
+        <p class="text-sm text-[#64748B] mt-1">{{ evento.titulo }}</p>
+    </div>
+
+    <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-6">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="mb-4 p-3 bg-[#FEF2F2] border border-[#DC2626]/30 rounded-lg text-sm text-[#DC2626]">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="space-y-5">
+                <div>
+                    <label for="{{ form.nome.id_for_label }}" class="block text-xs font-bold text-[#0F172A] uppercase tracking-widest mb-2">
+                        Nome da Sessão *
+                    </label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}
+                    <p class="text-xs text-[#DC2626] mt-1">{{ form.nome.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.data_hora.id_for_label }}" class="block text-xs font-bold text-[#0F172A] uppercase tracking-widest mb-2">
+                        Data e Hora *
+                    </label>
+                    {{ form.data_hora }}
+                    {% if form.data_hora.errors %}
+                    <p class="text-xs text-[#DC2626] mt-1">{{ form.data_hora.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-start gap-3 p-4 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg">
+                    <input
+                        type="checkbox"
+                        name="{{ form.is_verificacao_poderes.html_name }}"
+                        id="{{ form.is_verificacao_poderes.id_for_label }}"
+                        {% if form.is_verificacao_poderes.value %}checked{% endif %}
+                        class="mt-0.5 w-4 h-4 accent-[#1D4ED8]"
+                    >
+                    <div>
+                        <label for="{{ form.is_verificacao_poderes.id_for_label }}" class="text-sm font-semibold text-[#0F172A] cursor-pointer">
+                            Sessão de Verificação de Poderes
+                        </label>
+                        <p class="text-xs text-[#64748B] mt-0.5">Identifica esta como a sessão inicial obrigatória (deve ser a de data/hora mais antiga do evento).</p>
+                        {% if form.is_verificacao_poderes.errors %}
+                        <p class="text-xs text-[#DC2626] mt-1">{{ form.is_verificacao_poderes.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button type="submit" class="flex-1 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
+                    {% if modo == 'editar' %}Salvar Alterações{% else %}Criar Sessão{% endif %}
+                </button>
+                <a href="{% url 'lista_sessoes' evento.slug %}" class="flex items-center justify-center px-6 border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] font-bold rounded-lg text-xs uppercase tracking-widest transition-all">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

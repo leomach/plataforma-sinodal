@@ -8,12 +8,12 @@ from django.http import JsonResponse, Http404
 from django.urls import reverse
 from django.utils import timezone
 from django.db import transaction
+from django.db.models import Exists, OuterRef
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.conf import settings
 
 from .models import Evento, Inscricao, CampoEvento, RespostaInscricao
-from apps.hub.models import Sessao, Presenca
 from .forms import InscricaoForm, EventoForm, CampoEventoFormSet
 from . import emails
 from .services import infinitepay as ip_service
@@ -223,9 +223,15 @@ def gerenciar_campos_evento(request, slug):
 @login_required
 @user_passes_test(is_lideranca)
 def gerenciar_inscricoes(request, slug):
+    from apps.sessoes.models import CredencialQRCode
     evento = get_object_or_404(Evento, slug=slug)
     filtro = request.GET.get('filtro', '')
-    inscricoes = Inscricao.objects.filter(evento=evento).select_related('usuario').order_by('-data_inscricao')
+    inscricoes = (
+        Inscricao.objects.filter(evento=evento)
+        .select_related('usuario')
+        .annotate(tem_qr=Exists(CredencialQRCode.objects.filter(inscricao=OuterRef('pk'))))
+        .order_by('-data_inscricao')
+    )
 
     if filtro == 'pendente_pagamento':
         inscricoes = inscricoes.filter(pago=False).exclude(status=constants.STATUS_REJEITADO)
@@ -238,6 +244,12 @@ def gerenciar_inscricoes(request, slug):
         inscricoes = inscricoes.filter(status=constants.STATUS_APROVADO)
     elif filtro == 'rejeitados':
         inscricoes = inscricoes.filter(status=constants.STATUS_REJEITADO)
+    elif filtro == 'sem_qr':
+        inscricoes = inscricoes.filter(
+            papel_evento__in=[constants.PAPEL_DELEGADO, constants.PAPEL_EX_OFFICIO],
+            status=constants.STATUS_APROVADO,
+            tem_qr=False,
+        )
 
     return render(request, 'eventos/inscricoes.html', {
         'evento': evento,
