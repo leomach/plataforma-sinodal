@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Explorar — Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-[#0F172A] serif-title">Explorar</h1>
+        <p class="text-sm text-[#64748B] mt-1">Conheça os participantes da Plataforma Sinodal</p>
+    </div>
+
+    <!-- Busca + Filtros -->
+    <div class="bg-white border border-[#E2E8F0] rounded-xl p-4 mb-6 shadow-sm">
+
+        <!-- Campo de busca -->
+        <div class="relative mb-4">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+            </svg>
+            <input
+                id="search-q"
+                type="text"
+                name="q"
+                value="{{ busca }}"
+                placeholder="Buscar por nome..."
+                autocomplete="off"
+                hx-get="{% url 'explorar' %}"
+                hx-trigger="keyup changed delay:400ms"
+                hx-include="#filtros-form"
+                hx-target="#explorar-grid"
+                hx-swap="innerHTML"
+                hx-push-url="true"
+                class="w-full pl-9 pr-4 py-2.5 border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8] transition-all"
+            >
+        </div>
+
+        <!-- Filtros de evento -->
+        {% if meus_eventos %}
+        <div class="flex flex-wrap gap-2">
+            <button
+                onclick="selecionarEvento('')"
+                class="filtro-pill text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all
+                    {% if not evento_id %}bg-[#0F172A] text-white border-[#0F172A]{% else %}text-[#64748B] border-[#E2E8F0] hover:border-[#0F172A] hover:text-[#0F172A]{% endif %}"
+                data-evento="">
+                Todos
+            </button>
+            {% for ev in meus_eventos %}
+            <button
+                onclick="selecionarEvento('{{ ev.pk }}')"
+                class="filtro-pill text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all
+                    {% if evento_id == ev.pk|stringformat:'s' %}bg-[#1D4ED8] text-white border-[#1D4ED8]{% else %}text-[#64748B] border-[#E2E8F0] hover:border-[#1D4ED8] hover:text-[#1D4ED8]{% endif %}"
+                data-evento="{{ ev.pk }}">
+                {{ ev.titulo }}
+            </button>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Campo oculto que mantém o evento selecionado para as próximas buscas -->
+        <form id="filtros-form">
+            <input type="hidden" id="evento-hidden" name="evento" value="{{ evento_id }}">
+        </form>
+    </div>
+
+    <!-- Grid (substituído via HTMX em busca/filtro/paginação) -->
+    <div id="explorar-grid">
+        {% include "hub/partials/explorar_grid.html" %}
+    </div>
+
+</div>
+
+<!-- Modal de perfil -->
+<div id="modal-perfil" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm max-h-[85vh] overflow-y-auto">
+        <div id="modal-perfil-content">
+            <!-- Spinner enquanto carrega -->
+            <div id="modal-perfil-spinner" class="p-12 text-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D4ED8] mx-auto"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var _PILL_BASE   = 'filtro-pill text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all';
+var _PILL_OFF    = 'text-[#64748B] border-[#E2E8F0] hover:border-[#1D4ED8] hover:text-[#1D4ED8]';
+var _PILL_TODOS  = 'bg-[#0F172A] text-white border-[#0F172A]';
+var _PILL_EVENTO = 'bg-[#1D4ED8] text-white border-[#1D4ED8]';
+
+function selecionarEvento(eventoId) {
+    document.getElementById('evento-hidden').value = eventoId;
+
+    // Recalcula className de cada pill do zero — evita conflito de classes Tailwind
+    document.querySelectorAll('.filtro-pill').forEach(function(btn) {
+        var isTodos = btn.getAttribute('data-evento') === '';
+        var isAtivo = btn.getAttribute('data-evento') === eventoId;
+        var estado;
+        if (isAtivo) {
+            estado = isTodos ? _PILL_TODOS : _PILL_EVENTO;
+        } else {
+            estado = _PILL_OFF;
+        }
+        btn.className = _PILL_BASE + ' ' + estado;
+    });
+
+    // Dispara busca via HTMX incluindo busca atual
+    htmx.ajax('GET', '{% url "explorar" %}', {
+        values: { evento: eventoId, q: document.getElementById('search-q').value },
+        target: '#explorar-grid',
+        swap: 'innerHTML',
+    });
+
+    // Atualiza URL do navegador
+    var url = new URL(window.location);
+    if (eventoId) { url.searchParams.set('evento', eventoId); }
+    else          { url.searchParams.delete('evento'); }
+    url.searchParams.delete('pagina');
+    window.history.pushState({}, '', url);
+}
+
+// Fecha modal ao clicar fora
+document.getElementById('modal-perfil').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.add('hidden');
+});
+</script>
+{% endblock %}

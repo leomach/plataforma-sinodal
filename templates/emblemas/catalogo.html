@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo de Templates — Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <a href="{% url 'premiacoes_painel' %}" class="text-xs font-bold text-[#64748B] hover:text-[#0F172A] uppercase tracking-widest">← Painel</a>
+            <h1 class="text-2xl font-bold text-[#0F172A] serif-title mt-2">Catálogo de Templates</h1>
+            <p class="text-sm text-[#64748B] mt-1">Templates reutilizáveis para criar emblemas rapidamente.</p>
+        </div>
+        <a href="{% url 'catalogo_emblema_criar' %}"
+           class="px-4 py-2 text-xs font-bold uppercase tracking-widest bg-[#1D4ED8] text-white hover:bg-[#1D4ED8]/90 rounded-lg transition-all self-start sm:self-auto">
+            + Novo Template
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="mb-4 space-y-2">
+        {% for msg in messages %}
+        <div class="px-4 py-3 rounded-lg text-sm font-medium
+            {% if msg.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">
+            {{ msg }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if templates %}
+    {% regroup templates by get_categoria_display as por_categoria %}
+    {% for grupo in por_categoria %}
+    <div class="mb-8">
+        <h2 class="text-[11px] font-bold text-[#94A3B8] uppercase tracking-widest mb-3">{{ grupo.grouper }}</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {% for tmpl in grupo.list %}
+            <div class="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm flex items-start gap-3
+                        {% if not tmpl.ativo %}opacity-50{% endif %}">
+                <span class="text-2xl flex-shrink-0">{{ tmpl.icone }}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-0.5">
+                        <p class="font-semibold text-[#0F172A] text-sm">{{ tmpl.nome }}</p>
+                        {% if not tmpl.ativo %}
+                        <span class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-wider">Inativo</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-[12px] text-[#64748B] leading-relaxed">{{ tmpl.descricao }}</p>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    <a href="{% url 'catalogo_emblema_editar' tmpl.pk %}"
+                       class="text-xs font-bold text-[#64748B] hover:text-[#0F172A] border border-[#E2E8F0] hover:border-[#0F172A] rounded-lg px-2 py-1 transition-all">
+                        Editar
+                    </a>
+                    <form method="post" action="{% url 'catalogo_emblema_excluir' tmpl.pk %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                onclick="return confirm('Remover o template \"{{ tmpl.nome }}\"?')"
+                                class="text-xs font-bold text-red-400 hover:text-red-600 border border-red-100 hover:border-red-300 rounded-lg px-2 py-1 transition-all">
+                            Excluir
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="text-center py-20">
+        <div class="text-5xl mb-4">📋</div>
+        <p class="text-[#64748B] font-medium mb-2">Nenhum template no catálogo.</p>
+        <a href="{% url 'catalogo_emblema_criar' %}" class="text-sm font-bold text-[#1D4ED8] hover:underline">
+            Criar primeiro template →
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

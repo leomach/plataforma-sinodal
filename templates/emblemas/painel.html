@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Premiações — Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-[#0F172A] serif-title">Premiações</h1>
+            <p class="text-sm text-[#64748B] mt-1">Crie e gerencie emblemas para os participantes</p>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+            <a href="{% url 'emblema_catalogo' %}"
+               class="px-4 py-2 text-xs font-bold uppercase tracking-widest border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:border-[#0F172A] rounded-lg transition-all">
+                Catálogo
+            </a>
+            <a href="{% url 'emblema_criar' %}"
+               class="px-4 py-2 text-xs font-bold uppercase tracking-widest bg-[#1D4ED8] text-white hover:bg-[#1D4ED8]/90 rounded-lg transition-all">
+                + Novo Emblema
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="mb-4 space-y-2">
+        {% for msg in messages %}
+        <div class="px-4 py-3 rounded-lg text-sm font-medium
+            {% if msg.tags == 'success' %}bg-green-50 text-green-800 border border-green-200
+            {% elif msg.tags == 'error' %}bg-red-50 text-red-800 border border-red-200
+            {% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+            {{ msg }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Rascunhos em destaque -->
+    {% if total_rascunhos > 0 %}
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-center gap-3">
+        <span class="text-xl">✏️</span>
+        <div>
+            <p class="text-sm font-bold text-amber-800">
+                {{ total_rascunhos }} emblema{{ total_rascunhos|pluralize }} em rascunho
+            </p>
+            <p class="text-xs text-amber-600 mt-0.5">Clique em "Selecionar" em cada emblema para escolher os destinatários e publicar.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filtros -->
+    <div class="bg-white border border-[#E2E8F0] rounded-xl p-4 mb-6 shadow-sm">
+        <form method="get" class="flex flex-wrap gap-3 items-end">
+            <div>
+                <label class="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-1">Evento</label>
+                <select name="evento"
+                        onchange="this.form.submit()"
+                        class="text-sm border border-[#E2E8F0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30">
+                    <option value="">Todos</option>
+                    <option value="__global__" {% if evento_slug == '__global__' %}selected{% endif %}>Sem evento (Globais)</option>
+                    {% for ev in eventos_com_emblemas %}
+                    <option value="{{ ev.slug }}" {% if evento_slug == ev.slug %}selected{% endif %}>{{ ev.titulo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-1">Status</label>
+                <select name="status"
+                        onchange="this.form.submit()"
+                        class="text-sm border border-[#E2E8F0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30">
+                    <option value="">Todos</option>
+                    <option value="{{ RASCUNHO }}" {% if status_filtro == RASCUNHO|stringformat:'s' %}selected{% endif %}>Rascunho</option>
+                    <option value="{{ PUBLICADO }}" {% if status_filtro == PUBLICADO|stringformat:'s' %}selected{% endif %}>Publicado</option>
+                </select>
+            </div>
+            {% if evento_slug or status_filtro %}
+            <a href="{% url 'premiacoes_painel' %}"
+               class="text-xs font-bold text-[#64748B] hover:text-[#0F172A] uppercase tracking-widest py-2">
+                Limpar
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Lista de emblemas -->
+    {% if emblemas %}
+    <div class="space-y-3">
+        {% for emblema in emblemas %}
+        <div class="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-start gap-4">
+                <!-- Ícone -->
+                <div class="text-3xl leading-none flex-shrink-0 mt-0.5">{{ emblema.icone }}</div>
+
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                        <h3 class="font-bold text-[#0F172A]">{{ emblema.nome }}</h3>
+                        {% if emblema.status == RASCUNHO %}
+                        <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Rascunho</span>
+                        {% else %}
+                        <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Publicado</span>
+                        {% endif %}
+                        <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]">
+                            {{ emblema.get_categoria_display }}
+                        </span>
+                    </div>
+                    <p class="text-sm text-[#64748B] mb-2">{{ emblema.descricao }}</p>
+                    <div class="flex flex-wrap items-center gap-3 text-[11px] text-[#94A3B8]">
+                        {% if emblema.evento %}
+                        <span>📅 {{ emblema.evento.titulo }}</span>
+                        {% else %}
+                        <span>🌐 Global</span>
+                        {% endif %}
+                        <span>👤 {{ emblema.total_destinatarios }} premiado{{ emblema.total_destinatarios|pluralize }}</span>
+                        <span>Criado por {{ emblema.criado_por.get_full_name|default:emblema.criado_por.username }}</span>
+                        {% if emblema.publicado_em %}
+                        <span>Publicado em {{ emblema.publicado_em|date:"d/m/Y H:i" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="flex gap-2 flex-shrink-0">
+                    {% if emblema.status == RASCUNHO %}
+                    <a href="{% url 'emblema_selecionar' emblema.pk %}"
+                       class="px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-[#1D4ED8] text-white hover:bg-[#1D4ED8]/90 rounded-lg transition-all whitespace-nowrap">
+                        Selecionar
+                    </a>
+                    <a href="{% url 'emblema_editar' emblema.pk %}"
+                       class="px-3 py-1.5 text-xs font-bold uppercase tracking-widest border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:border-[#0F172A] rounded-lg transition-all">
+                        Editar
+                    </a>
+                    <form method="post" action="{% url 'emblema_excluir' emblema.pk %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                onclick="return confirm('Excluir o emblema \"{{ emblema.nome }}\"?')"
+                                class="px-3 py-1.5 text-xs font-bold uppercase tracking-widest border border-red-200 text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                            Excluir
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <div class="text-5xl mb-4">🏅</div>
+        <p class="text-[#64748B] font-medium mb-2">Nenhum emblema encontrado.</p>
+        <a href="{% url 'emblema_criar' %}" class="text-sm font-bold text-[#1D4ED8] hover:underline">
+            Criar primeiro emblema →
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

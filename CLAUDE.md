@@ -26,6 +26,22 @@ Isso preserva a API `Sessao.STATUS_ABERTA` e permite importar de `core.constants
 - Tailwind CSS (via CDN/Play CDN) para estilização
 - `html5-qrcode` (CDN) para leitura de QR Code
 
+## Mobile / responsividade
+
+### Zoom em inputs no iOS Safari
+
+iOS Safari dá zoom automático em qualquer `input`, `select` ou `textarea` com `font-size < 16px`. A correção global está em `templates/base.html` dentro do `@layer base`:
+
+```html
+<style>
+    @media (max-width: 767px) {
+        input, select, textarea { font-size: 16px !important; }
+    }
+</style>
+```
+
+A regra fica em um `<style>` normal (não dentro do bloco `text/tailwindcss`), com `!important`, porque classes utilitárias Tailwind como `text-sm` têm prioridade maior que `@layer base` e sobrescreveriam sem o `!important`. Aplica apenas em telas móveis, preservando o tamanho visual no desktop. **Nunca use `maximum-scale=1` no viewport** — isso desabilita zoom de acessibilidade do usuário.
+
 ## Estrutura de apps
 
 | App | Responsabilidade |
