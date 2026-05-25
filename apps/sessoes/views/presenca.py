@@ -14,6 +14,68 @@ from apps.sessoes.views.painel import is_lideranca, lideranca_required
 from core import constants
 
 
+def _contexto_lista_presencas(evento, sessao):
+    inscricoes = (
+        Inscricao.objects.filter(
+            evento=evento,
+            status=constants.STATUS_APROVADO,
+            papel_evento__in=[constants.PAPEL_DELEGADO, constants.PAPEL_EX_OFFICIO],
+        )
+        .select_related('usuario')
+        .order_by('usuario__first_name', 'usuario__last_name')
+    )
+    presencas_map = {
+        p.inscricao_id: p.presente
+        for p in Presenca.objects.filter(sessao=sessao)
+    }
+    participantes = [
+        {'inscricao': insc, 'presente': presencas_map.get(insc.pk, False)}
+        for insc in inscricoes
+    ]
+    return {
+        'evento': evento,
+        'sessao': sessao,
+        'presentes': [p for p in participantes if p['presente']],
+        'ausentes': [p for p in participantes if not p['presente']],
+    }
+
+
+@lideranca_required
+def lista_presencas(request, slug, sessao_id):
+    evento = get_object_or_404(Evento, slug=slug)
+    sessao = get_object_or_404(Sessao, pk=sessao_id, evento=evento)
+    return render(request, 'sessoes/partials/lista_presencas.html',
+                  _contexto_lista_presencas(evento, sessao))
+
+
+@require_POST
+@lideranca_required
+def toggle_presenca_admin(request, slug, sessao_id):
+    evento = get_object_or_404(Evento, slug=slug)
+    sessao = get_object_or_404(Sessao, pk=sessao_id, evento=evento)
+
+    inscricao_id = request.POST.get('inscricao_id')
+    inscricao = get_object_or_404(
+        Inscricao,
+        pk=inscricao_id,
+        evento=evento,
+        status=constants.STATUS_APROVADO,
+        papel_evento__in=[constants.PAPEL_DELEGADO, constants.PAPEL_EX_OFFICIO],
+    )
+
+    obj, _ = Presenca.objects.get_or_create(sessao=sessao, inscricao=inscricao)
+    obj.presente = not obj.presente
+    obj.save(update_fields=['presente', 'ultima_atualizacao'])
+
+    if obj.presente:
+        log_service.log_entrada(sessao, inscricao)
+    else:
+        log_service.log_saida(sessao, inscricao)
+
+    return render(request, 'sessoes/partials/lista_presencas.html',
+                  _contexto_lista_presencas(evento, sessao))
+
+
 @lideranca_required
 def leitor_presenca(request, slug, sessao_id):
     evento = get_object_or_404(Evento, slug=slug)

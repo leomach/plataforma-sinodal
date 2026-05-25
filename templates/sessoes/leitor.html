@@ -17,7 +17,7 @@
         <!-- Quórum em tempo real -->
         <div id="quorum-leitor"
             hx-get="{% url 'contagem_presenca' evento.slug sessao.pk %}"
-            hx-trigger="every 3s"
+            hx-trigger="every 10s"
             hx-swap="innerHTML">
             {% include "sessoes/partials/quorum.html" %}
         </div>

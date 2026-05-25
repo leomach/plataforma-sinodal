@@ -13,6 +13,8 @@ urlpatterns = [
     # Presença
     path('sessoes/<int:sessao_id>/leitor/', presenca.leitor_presenca, name='leitor_presenca'),
     path('sessoes/<int:sessao_id>/presenca/toggle/', presenca.toggle_presenca, name='toggle_presenca'),
+    path('sessoes/<int:sessao_id>/presenca/toggle-admin/', presenca.toggle_presenca_admin, name='toggle_presenca_admin'),
+    path('sessoes/<int:sessao_id>/presenca/lista/', presenca.lista_presencas, name='lista_presencas'),
     path('sessoes/<int:sessao_id>/presenca/contagem/', presenca.contagem_presenca, name='contagem_presenca'),
 
     # Votações (liderança)

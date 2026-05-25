@@ -22,6 +22,7 @@ def _criar_log(sessao, descricao, usuario=None):
 
 
 def log_sessao_aberta(sessao) -> 'EventoLog':
+    from apps.sessoes.models import Presenca
     hora = _hora_agora()
     info = quorum_service.info_quorum(sessao.pk)
     status_q = (
@@ -29,9 +30,26 @@ def log_sessao_aberta(sessao) -> 'EventoLog':
         if info['atingido']
         else 'não sendo atingido o quórum regimental mínimo'
     )
+
+    presencas = (
+        Presenca.objects.filter(sessao=sessao, presente=True)
+        .select_related('inscricao__usuario')
+        .order_by('inscricao__usuario__first_name', 'inscricao__usuario__last_name')
+    )
+    nomes = [
+        p.inscricao.usuario.get_full_name() or p.inscricao.usuario.username
+        for p in presencas
+    ]
+    lista_nomes = (
+        (': ' + ', '.join(nomes) + '.')
+        if nomes
+        else '.'
+    )
+
     descricao = (
         f"Às {hora}, o Presidente declara aberta a sessão. "
-        f"Encontram-se presentes {info['presentes']} delegados credenciados, {status_q}."
+        f"Encontram-se presentes {info['presentes']} delegados credenciados, {status_q}. "
+        f"Registram presença{lista_nomes}"
     )
     return _criar_log(sessao, descricao)
 

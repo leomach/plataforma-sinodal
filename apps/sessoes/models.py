@@ -3,21 +3,16 @@ from django.db.models import Count, Q
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 
+from core import constants as _c
+
 
 class Sessao(models.Model):
-    STATUS_EM_BREVE = 1
-    STATUS_CHAMADA = 2
-    STATUS_ABERTA = 3
-    STATUS_ENCERRADA = 4
-
-    STATUS_CHOICES = [
-        (STATUS_EM_BREVE, 'Em Breve'),
-        (STATUS_CHAMADA, 'Chamada'),
-        (STATUS_ABERTA, 'Aberta'),
-        (STATUS_ENCERRADA, 'Encerrada'),
-    ]
-
-    STATUS_ATIVOS = [STATUS_CHAMADA, STATUS_ABERTA]
+    STATUS_EM_BREVE = _c.SESSAO_EM_BREVE
+    STATUS_CHAMADA = _c.SESSAO_CHAMADA
+    STATUS_ABERTA = _c.SESSAO_ABERTA
+    STATUS_ENCERRADA = _c.SESSAO_ENCERRADA
+    STATUS_CHOICES = _c.SESSAO_STATUS_CHOICES
+    STATUS_ATIVOS = _c.SESSAO_STATUS_ATIVOS
 
     evento = models.ForeignKey(
         'eventos.Evento',
@@ -154,23 +149,14 @@ class Presenca(models.Model):
 
 
 class Votacao(models.Model):
-    STATUS_ABERTA = 1
-    STATUS_EMPATADA = 2
-    STATUS_ENCERRADA = 3
+    STATUS_ABERTA = _c.VOTACAO_ABERTA
+    STATUS_EMPATADA = _c.VOTACAO_EMPATADA
+    STATUS_ENCERRADA = _c.VOTACAO_ENCERRADA
+    STATUS_CHOICES = _c.VOTACAO_STATUS_CHOICES
 
-    STATUS_CHOICES = [
-        (STATUS_ABERTA, 'Aberta'),
-        (STATUS_EMPATADA, 'Aguardando Voto de Minerva'),
-        (STATUS_ENCERRADA, 'Encerrada'),
-    ]
-
-    RESULTADO_APROVADA = 1
-    RESULTADO_REJEITADA = 2
-
-    RESULTADO_CHOICES = [
-        (RESULTADO_APROVADA, 'Aprovada'),
-        (RESULTADO_REJEITADA, 'Rejeitada'),
-    ]
+    RESULTADO_APROVADA = _c.VOTACAO_APROVADA
+    RESULTADO_REJEITADA = _c.VOTACAO_REJEITADA
+    RESULTADO_CHOICES = _c.VOTACAO_RESULTADO_CHOICES
 
     sessao = models.ForeignKey(
         Sessao,
@@ -233,15 +219,10 @@ class Votacao(models.Model):
 
 
 class VotoParticipante(models.Model):
-    VOTO_FAVOR = 1
-    VOTO_CONTRA = 2
-    VOTO_ABSTER = 3
-
-    VOTO_CHOICES = [
-        (VOTO_FAVOR, 'A Favor'),
-        (VOTO_CONTRA, 'Contra'),
-        (VOTO_ABSTER, 'Abster-se'),
-    ]
+    VOTO_FAVOR = _c.VOTO_FAVOR
+    VOTO_CONTRA = _c.VOTO_CONTRA
+    VOTO_ABSTER = _c.VOTO_ABSTER
+    VOTO_CHOICES = _c.VOTO_CHOICES
 
     votacao = models.ForeignKey(
         Votacao,
@@ -266,13 +247,9 @@ class VotoParticipante(models.Model):
 
 
 class EventoLog(models.Model):
-    TIPO_AUTO = 1
-    TIPO_MANUAL = 2
-
-    TIPO_CHOICES = [
-        (TIPO_AUTO, 'Automático'),
-        (TIPO_MANUAL, 'Manual'),
-    ]
+    TIPO_AUTO = _c.LOG_AUTO
+    TIPO_MANUAL = _c.LOG_MANUAL
+    TIPO_CHOICES = _c.LOG_TIPO_CHOICES
 
     sessao = models.ForeignKey(
         Sessao,
@@ -307,21 +284,13 @@ class EventoLog(models.Model):
 
 
 class MembroDaMesa(models.Model):
-    PRESIDENTE = 1
-    VICE_PRESIDENTE = 2
-    PRIMEIRO_SECRETARIO = 3
-    SEGUNDO_SECRETARIO = 4
-    TESOUREIRO = 5
-    SECRETARIO_EXECUTIVO = 6
-
-    CARGO_CHOICES = [
-        (PRESIDENTE, 'Presidente da Mesa'),
-        (VICE_PRESIDENTE, 'Vice-Presidente'),
-        (PRIMEIRO_SECRETARIO, '1º Secretário'),
-        (SEGUNDO_SECRETARIO, '2º Secretário'),
-        (TESOUREIRO, 'Tesoureiro'),
-        (SECRETARIO_EXECUTIVO, 'Secretário Executivo'),
-    ]
+    PRESIDENTE = _c.CARGO_PRESIDENTE
+    VICE_PRESIDENTE = _c.CARGO_VICE_PRESIDENTE
+    PRIMEIRO_SECRETARIO = _c.CARGO_PRIMEIRO_SECRETARIO
+    SEGUNDO_SECRETARIO = _c.CARGO_SEGUNDO_SECRETARIO
+    TESOUREIRO = _c.CARGO_TESOUREIRO
+    SECRETARIO_EXECUTIVO = _c.CARGO_SECRETARIO_EXECUTIVO
+    CARGO_CHOICES = _c.CARGO_MESA_CHOICES
 
     sessao = models.ForeignKey(
         Sessao,

@@ -100,11 +100,19 @@
 
             <!-- Quórum (com HTMX polling) -->
             <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-5">
-                <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest mb-3">Quórum</p>
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest">Quórum</p>
+                    <button
+                        onclick="abrirListaPresencas()"
+                        class="text-xs font-bold text-[#1D4ED8] hover:text-blue-800 uppercase tracking-widest"
+                    >
+                        Ver lista
+                    </button>
+                </div>
                 <div
                     id="quorum-container"
                     hx-get="{% url 'contagem_presenca' evento.slug sessao.pk %}"
-                    hx-trigger="every 3s"
+                    {% if sessao.status != 4 %}hx-trigger="every 10s"{% endif %}
                     hx-swap="innerHTML"
                 >
                     {% include "sessoes/partials/quorum.html" %}
@@ -190,7 +198,7 @@
                     <!-- Contagem em tempo real -->
                     <div id="resultado-votacao-{{ votacao_aberta.pk }}"
                         hx-get="{% url 'resultado_votacao' evento.slug sessao.pk votacao_aberta.pk %}"
-                        hx-trigger="every 3s"
+                        hx-trigger="every 10s"
                         hx-swap="innerHTML">
                         {% include "sessoes/partials/resultado_votacao.html" with votacao=votacao_aberta contagem=votacao_aberta.contagem %}
                     </div>
@@ -402,6 +410,23 @@
 </div>
 {% endif %}
 
+<!-- Modal: Lista de Presenças -->
+<div id="modal-presencas" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-lg flex flex-col max-h-[85vh]">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] shrink-0">
+            <h2 class="font-bold text-lg text-[#0F172A] serif-title">Lista de Presenças</h2>
+            <button onclick="document.getElementById('modal-presencas').classList.add('hidden')" class="text-[#94A3B8] hover:text-[#0F172A]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto px-6 py-4">
+            <div id="lista-presencas-content">
+                <p class="text-xs text-[#64748B] italic text-center py-8">Carregando...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal: Exportar Log -->
 <div id="modal-exportar-wrapper" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
     <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6 max-h-[80vh] flex flex-col">
@@ -414,4 +439,14 @@
         <div id="modal-exportar" class="flex-1 overflow-y-auto"></div>
     </div>
 </div>
+
+<script>
+function abrirListaPresencas() {
+    document.getElementById('modal-presencas').classList.remove('hidden');
+    htmx.ajax('GET', '{% url "lista_presencas" evento.slug sessao.pk %}', {
+        target: '#lista-presencas-content',
+        swap: 'outerHTML',
+    });
+}
+</script>
 {% endblock %}
