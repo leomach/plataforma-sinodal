@@ -49,6 +49,29 @@
     </div>
     {% endif %}
 
+    <!-- Emblemas -->
+    {% if perfil.emblemas_publicados %}
+    <div class="mb-5">
+        <p class="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-3">Premiações</p>
+        <div class="flex flex-wrap gap-2">
+            {% for eu in perfil.emblemas_publicados %}
+            <div class="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-2.5 py-1.5"
+                 title="{{ eu.emblema.descricao }}">
+                <span class="text-base leading-none">{{ eu.emblema.icone }}</span>
+                <div>
+                    <p class="text-[11px] font-semibold text-[#0F172A] leading-tight">{{ eu.emblema.nome }}</p>
+                    {% if eu.emblema.evento %}
+                    <p class="text-[9px] text-[#94A3B8]">{{ eu.emblema.evento.titulo }}</p>
+                    {% else %}
+                    <p class="text-[9px] text-[#94A3B8]">Global</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- WhatsApp -->
     {% if whatsapp_link %}
     <a href="{{ whatsapp_link }}"

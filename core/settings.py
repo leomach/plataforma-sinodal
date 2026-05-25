@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'apps.usuarios',
     'apps.hub',
     'apps.sessoes',
+    'apps.emblemas',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.emblemas.context_processors.emblemas_pendentes',
             ],
         },
     },

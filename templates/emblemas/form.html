@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{% if emblema %}Editar Emblema{% else %}Novo Emblema{% endif %} — Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+    <div class="mb-6">
+        <a href="{% url 'premiacoes_painel' %}" class="text-xs font-bold text-[#64748B] hover:text-[#0F172A] uppercase tracking-widest">
+            ← Voltar
+        </a>
+        <h1 class="text-2xl font-bold text-[#0F172A] serif-title mt-2">
+            {% if emblema %}Editar Emblema{% else %}Novo Emblema{% endif %}
+        </h1>
+    </div>
+
+    {% if messages %}
+    <div class="mb-4 space-y-2">
+        {% for msg in messages %}
+        <div class="px-4 py-3 rounded-lg text-sm font-medium bg-red-50 text-red-800 border border-red-200">{{ msg }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Catálogo de templates (apenas em novo) -->
+    {% if not emblema and catalogo %}
+    <div class="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 mb-6">
+        <p class="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-3">Usar template do catálogo</p>
+        <div class="flex flex-wrap gap-2">
+            {% for tmpl in catalogo %}
+            <button type="button"
+                    onclick="aplicarTemplate('{{ tmpl.icone|escapejs }}', '{{ tmpl.nome|escapejs }}', '{{ tmpl.descricao|escapejs }}', '{{ tmpl.categoria }}')"
+                    class="text-xs border border-[#E2E8F0] text-[#64748B] hover:border-[#1D4ED8] hover:text-[#1D4ED8] rounded-lg px-3 py-1.5 transition-all">
+                {{ tmpl.icone }} {{ tmpl.nome }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="post" class="bg-white border border-[#E2E8F0] rounded-xl p-6 shadow-sm space-y-5">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-5 gap-4">
+            <!-- Ícone -->
+            <div class="col-span-1">
+                <label class="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-1">Ícone</label>
+                <input id="id_icone" type="text" name="icone"
+                       value="{{ emblema.icone|default:inicial.icone }}"
+                       maxlength="10"
+                       class="w-full text-center text-2xl border border-[#E2E8F0] rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8]">
+            </div>
+            <!-- Nome -->
+            <div class="col-span-4">
+                <label class="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-1">Nome <span class="text-red-400">*</span></label>
+                <input id="id_nome" type="text" name="nome"
+                       value="{{ emblema.nome|default:inicial.nome }}"
+                       maxlength="60"
+                       placeholder="Ex: Melhor Acampante"
+                       class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8]">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-1">Descrição <span class="text-red-400">*</span></label>
+            <textarea id="id_descricao" name="descricao" rows="3" maxlength="200"
+                      placeholder="O que esse emblema representa e quais critérios a liderança usou para concedê-lo."
+                      class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8]">{{ emblema.descricao|default:inicial.descricao }}</textarea>
+            <p class="text-[10px] text-[#94A3B8] mt-1">Máximo 200 caracteres.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-1">Categoria <span class="text-red-400">*</span></label>
+                <select id="id_categoria" name="categoria"
+                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8]">
+                    <option value="">Selecionar...</option>
+                    {% for val, label in categorias %}
+                    <option value="{{ val }}"
+                        {% if emblema.categoria == val or inicial.categoria == val %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-1">
+                    Evento
+                    <span class="normal-case text-[9px] font-normal ml-1">(opcional)</span>
+                </label>
+                <select name="evento"
+                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8]">
+                    <option value="">Global (sem evento)</option>
+                    {% for ev in eventos %}
+                    <option value="{{ ev.pk }}" {% if emblema.evento_id == ev.pk %}selected{% endif %}>
+                        {{ ev.titulo }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+            <a href="{% url 'premiacoes_painel' %}"
+               class="px-4 py-2.5 text-xs font-bold uppercase tracking-widest border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] rounded-lg transition-all">
+                Cancelar
+            </a>
+            <button type="submit"
+                    class="px-6 py-2.5 text-xs font-bold uppercase tracking-widest bg-[#1D4ED8] text-white hover:bg-[#1D4ED8]/90 rounded-lg transition-all">
+                {% if emblema %}Salvar Alterações{% else %}Criar e Selecionar Destinatários →{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function aplicarTemplate(icone, nome, descricao, categoria) {
+    document.getElementById('id_icone').value = icone;
+    document.getElementById('id_nome').value = nome;
+    document.getElementById('id_descricao').value = descricao;
+    var sel = document.getElementById('id_categoria');
+    for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === categoria) { sel.selectedIndex = i; break; }
+    }
+}
+</script>
+{% endblock %}

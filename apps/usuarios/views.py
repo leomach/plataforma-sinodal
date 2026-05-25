@@ -73,21 +73,24 @@ def rebaixar_usuario(request, user_id):
 
 @login_required
 def perfil(request):
+    from apps.emblemas.models import EmblemaUsuario
     inscricoes = Inscricao.objects.filter(usuario=request.user).order_by('-data_inscricao')
-    
+    meus_emblemas = (
+        EmblemaUsuario.objects.filter(usuario=request.user)
+        .select_related('emblema__evento')
+        .order_by('-concedido_em')
+    )
+
     if request.method == 'POST':
-        print("FILES received:", request.FILES)
         form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            print("Form is valid. Saving...")
             form.save()
             return redirect('perfil')
-        else:
-            print("Form errors:", form.errors)
     else:
         form = ProfileUpdateForm(instance=request.user)
-    
+
     return render(request, 'usuarios/perfil.html', {
         'form': form,
-        'inscricoes': inscricoes
+        'inscricoes': inscricoes,
+        'meus_emblemas': meus_emblemas,
     })

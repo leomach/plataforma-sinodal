@@ -1,0 +1,33 @@
+{% if requer_busca %}
+<div class="text-center py-10 text-[#94A3B8] text-sm">
+    <p class="text-2xl mb-2">🔍</p>
+    <p>Este é um emblema global. Digite um nome para buscar participantes.</p>
+</div>
+{% elif participantes %}
+<div class="space-y-1" id="lista-usuarios-items">
+    {% for p in participantes %}
+    <label class="flex items-center gap-3 p-3 hover:bg-[#F8FAFC] rounded-lg cursor-pointer select-none group">
+        <input type="checkbox"
+               class="cb-usuario w-4 h-4 rounded border-[#CBD5E1] text-[#1D4ED8] focus:ring-[#1D4ED8]/30 cursor-pointer"
+               value="{{ p.usuario.pk }}"
+               onchange="toggleUsuario({{ p.usuario.pk }}, this.checked)">
+        {% if p.usuario.foto %}
+        <img src="{{ p.usuario.foto.url }}" alt="{{ p.usuario.get_full_name }}"
+             class="w-9 h-9 rounded-full object-cover ring-2 ring-[#E2E8F0] flex-shrink-0">
+        {% else %}
+        <div class="w-9 h-9 rounded-full bg-[#1D4ED8] flex items-center justify-center font-bold text-xs text-white ring-2 ring-[#E2E8F0] flex-shrink-0">
+            {{ p.usuario.first_name|first|upper }}{{ p.usuario.last_name|first|upper }}
+        </div>
+        {% endif %}
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-[#0F172A] truncate">{{ p.usuario.get_full_name|default:p.usuario.username }}</p>
+            <p class="text-[11px] text-[#94A3B8]">{{ p.papel }}</p>
+        </div>
+    </label>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-10 text-[#94A3B8] text-sm">
+    Nenhum participante encontrado com os filtros aplicados.
+</div>
+{% endif %}

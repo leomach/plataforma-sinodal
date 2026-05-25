@@ -137,3 +137,25 @@ CARGO_MESA_CHOICES = [
     (CARGO_TESOUREIRO, _('Tesoureiro')),
     (CARGO_SECRETARIO_EXECUTIVO, _('Secretário Executivo')),
 ]
+
+# Status de Emblema
+EMBLEMA_RASCUNHO  = 1
+EMBLEMA_PUBLICADO = 2
+
+EMBLEMA_STATUS_CHOICES = [
+    (EMBLEMA_RASCUNHO,  _('Rascunho')),
+    (EMBLEMA_PUBLICADO, _('Publicado')),
+]
+
+# Categorias de Emblema
+EMBLEMA_CAT_COMPORTAMENTO = 'comportamento'
+EMBLEMA_CAT_SERVICO       = 'servico'
+EMBLEMA_CAT_DEMOCRATICO   = 'democratico'
+EMBLEMA_CAT_ESPECIAL      = 'especial'
+
+EMBLEMA_CATEGORIA_CHOICES = [
+    (EMBLEMA_CAT_COMPORTAMENTO, _('Comportamento e Postura')),
+    (EMBLEMA_CAT_SERVICO,       _('Serviço e Dedicação')),
+    (EMBLEMA_CAT_DEMOCRATICO,   _('Participação Democrática')),
+    (EMBLEMA_CAT_ESPECIAL,      _('Especial')),
+]

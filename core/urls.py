@@ -11,6 +11,7 @@ urlpatterns = [
     path('usuarios/', include('apps.usuarios.urls')),
     path('eventos/', include('apps.eventos.urls')),
     path('hub/', include('apps.hub.urls')),
+    path('premiacoes/', include('apps.emblemas.urls')),
     path('webhooks/infinitepay/<str:token>/', evento_views.webhook_infinitepay, name='webhook_infinitepay'),
 ]
 

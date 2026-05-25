@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Selecionar Destinatários — {{ emblema.nome }} — Plataforma Sinodal{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{% url 'premiacoes_painel' %}" class="text-xs font-bold text-[#64748B] hover:text-[#0F172A] uppercase tracking-widest">
+            ← Voltar ao painel
+        </a>
+        <div class="flex items-center gap-3 mt-3">
+            <span class="text-4xl">{{ emblema.icone }}</span>
+            <div>
+                <h1 class="text-2xl font-bold text-[#0F172A] serif-title">{{ emblema.nome }}</h1>
+                <p class="text-sm text-[#64748B]">{{ emblema.descricao }}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="mb-4 space-y-2">
+        {% for msg in messages %}
+        <div class="px-4 py-3 rounded-lg text-sm font-medium bg-red-50 text-red-800 border border-red-200">{{ msg }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Filtros + busca -->
+    <div class="bg-white border border-[#E2E8F0] rounded-xl p-4 mb-4 shadow-sm">
+        <div class="flex flex-wrap gap-3 items-end">
+            <!-- Busca -->
+            <div class="flex-1 min-w-[200px] relative">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                </svg>
+                <!--
+                  name propositalmente AUSENTE: filtros-form já tem name="q".
+                  oninput mantém filtros-q sincronizado para outros triggers (papel, presentes).
+                -->
+                <input id="search-q" type="text" value="{{ q }}"
+                       placeholder="Buscar por nome{% if not emblema.evento_id %} (obrigatório){% endif %}..."
+                       autocomplete="off"
+                       oninput="document.getElementById('filtros-q').value=this.value"
+                       hx-get="{% url 'emblema_selecionar' emblema.pk %}"
+                       hx-trigger="keyup changed delay:400ms"
+                       hx-target="#lista-usuarios"
+                       hx-swap="innerHTML"
+                       hx-include="#filtros-form"
+                       class="w-full pl-9 pr-4 py-2.5 border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8]">
+            </div>
+
+            {% if emblema.evento %}
+            <!-- Filtro papel -->
+            <div>
+                <select id="filtro-papel" name="papel" form="filtros-form"
+                        hx-get="{% url 'emblema_selecionar' emblema.pk %}"
+                        hx-trigger="change"
+                        hx-target="#lista-usuarios"
+                        hx-swap="innerHTML"
+                        hx-include="#filtros-form"
+                        class="text-sm border border-[#E2E8F0] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30">
+                    <option value="">Todos os papéis</option>
+                    {% for val, label in papeis %}
+                    <option value="{{ val }}" {% if papel_filtro == val|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro presença -->
+            <label class="flex items-center gap-2 text-sm text-[#64748B] cursor-pointer">
+                <input type="checkbox" id="filtro-presentes" name="presentes" value="1"
+                       form="filtros-form"
+                       {% if apenas_presentes %}checked{% endif %}
+                       hx-get="{% url 'emblema_selecionar' emblema.pk %}"
+                       hx-trigger="change"
+                       hx-target="#lista-usuarios"
+                       hx-swap="innerHTML"
+                       hx-include="#filtros-form"
+                       class="rounded border-[#CBD5E1] text-[#1D4ED8]">
+                Apenas presentes
+            </label>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Form oculto de filtros para o HTMX include -->
+    <form id="filtros-form" style="display:none;">
+        <input type="hidden" name="q" id="filtros-q" value="{{ q }}">
+        <input type="hidden" name="papel" value="{{ papel_filtro }}">
+        {% if apenas_presentes %}<input type="hidden" name="presentes" value="1">{% endif %}
+    </form>
+
+    <!-- Barra de seleção -->
+    <div class="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 py-3 mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-[#64748B]">
+                <span id="contador" class="font-bold text-[#0F172A] text-lg">0</span>
+                selecionados
+            </span>
+            <div class="flex gap-2">
+                <button type="button" onclick="selecionarTodos()"
+                        class="text-xs font-bold text-[#1D4ED8] hover:underline uppercase tracking-widest">
+                    Selecionar todos
+                </button>
+                <span class="text-[#E2E8F0]">|</span>
+                <button type="button" onclick="limparSelecao()"
+                        class="text-xs font-bold text-[#94A3B8] hover:text-[#64748B] hover:underline uppercase tracking-widest">
+                    Limpar
+                </button>
+            </div>
+        </div>
+        <!-- Preview dos selecionados -->
+        <div id="preview-selecionados" class="flex -space-x-2 hidden"></div>
+    </div>
+
+    <!-- Lista de usuários (target do HTMX) -->
+    <div id="lista-usuarios"
+         class="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden shadow-sm max-h-[500px] overflow-y-auto p-2">
+        {% include "emblemas/partials/lista_usuarios.html" %}
+    </div>
+
+    <!-- Form de publicação -->
+    <form id="form-publicar" method="post" action="{% url 'emblema_publicar' emblema.pk %}">
+        {% csrf_token %}
+        <div id="selecionados-container"></div>
+        <div class="flex justify-end gap-3 mt-6">
+            <a href="{% url 'premiacoes_painel' %}"
+               class="px-4 py-2.5 text-xs font-bold uppercase tracking-widest border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] rounded-lg transition-all">
+                Cancelar
+            </a>
+            <button type="submit" id="btn-publicar" disabled
+                    class="px-6 py-2.5 text-xs font-bold uppercase tracking-widest bg-[#1D4ED8] text-white rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:bg-[#1D4ED8]/90">
+                Publicar Emblema
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+var selecao = new Set();
+
+function toggleUsuario(uid, checked) {
+    if (checked) selecao.add(uid);
+    else selecao.delete(uid);
+    atualizarUI();
+}
+
+function selecionarTodos() {
+    document.querySelectorAll('.cb-usuario').forEach(function(cb) {
+        var uid = parseInt(cb.value);
+        cb.checked = true;
+        selecao.add(uid);
+    });
+    atualizarUI();
+}
+
+function limparSelecao() {
+    selecao.clear();
+    document.querySelectorAll('.cb-usuario').forEach(function(cb) { cb.checked = false; });
+    atualizarUI();
+}
+
+function atualizarUI() {
+    document.getElementById('contador').textContent = selecao.size;
+    document.getElementById('btn-publicar').disabled = selecao.size === 0;
+
+    var container = document.getElementById('selecionados-container');
+    container.innerHTML = '';
+    selecao.forEach(function(uid) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'destinatarios';
+        input.value = uid;
+        container.appendChild(input);
+    });
+}
+
+// Re-marca checkboxes após swap HTMX
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target && evt.detail.target.id === 'lista-usuarios') {
+        document.querySelectorAll('.cb-usuario').forEach(function(cb) {
+            cb.checked = selecao.has(parseInt(cb.value));
+        });
+        // Sincroniza campo q no form de filtros
+        var qInput = document.getElementById('search-q');
+        if (qInput) document.getElementById('filtros-q').value = qInput.value;
+    }
+});
+</script>
+{% endblock %}

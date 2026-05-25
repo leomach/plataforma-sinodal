@@ -22,6 +22,13 @@
         {% if usuario.bio %}
         <p class="text-[11px] text-[#94A3B8] mt-1 line-clamp-2 leading-snug">{{ usuario.bio|truncatechars:60 }}</p>
         {% endif %}
+        {% if usuario.emblemas_publicados %}
+        <div class="flex justify-center gap-0.5 mt-2">
+            {% for eu in usuario.emblemas_publicados|slice:":3" %}
+            <span class="text-base leading-none" title="{{ eu.emblema.nome }}">{{ eu.emblema.icone }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
     {% endfor %}
 </div>

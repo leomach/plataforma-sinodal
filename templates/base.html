@@ -82,6 +82,13 @@
             .badge-neutral { @apply badge bg-slate-100 text-text-muted border border-border; }
         }
     </style>
+    <!-- Impede zoom automático no iOS Safari (font-size < 16px dispara o zoom).
+         !important necessário para sobrescrever utilidades Tailwind como text-sm. -->
+    <style>
+        @media (max-width: 767px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+    </style>
 
     {% block extra_head %}{% endblock %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
@@ -140,6 +147,8 @@
                             <div class="absolute left-0 mt-0 w-52 bg-white rounded-md shadow-xl py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border border-border">
                                 <a href="{% url 'gerenciar_usuarios' %}" class="dropdown-item">Gerenciar Usuários</a>
                                 <a href="{% url 'gerenciar_eventos' %}" class="dropdown-item">Gerenciar Eventos</a>
+                                <div class="border-t border-border my-1"></div>
+                                <a href="{% url 'premiacoes_painel' %}" class="dropdown-item">Premiações</a>
                             </div>
                         </div>
                         {% endif %}
@@ -205,6 +214,7 @@
                             <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Administração</div>
                             <a href="{% url 'gerenciar_usuarios' %}" class="nav-link block pl-6 py-2">Gerenciar Usuários</a>
                             <a href="{% url 'gerenciar_eventos' %}" class="nav-link block pl-6 py-2">Gerenciar Eventos</a>
+                            <a href="{% url 'premiacoes_painel' %}" class="nav-link block pl-6 py-2">Premiações</a>
                         {% endif %}
                         
                         <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Sua Conta</div>
@@ -280,6 +290,58 @@
             </div>
         </div>
     </footer>
+
+    <!-- Toasts de Emblemas -->
+    {% if emblemas_pendentes %}
+    <div id="toast-emblemas-container" class="fixed bottom-6 right-4 z-50 flex flex-col gap-2 max-w-sm">
+        {% for conquista in emblemas_pendentes %}
+        <div id="toast-emblema-{{ conquista.pk }}"
+             class="bg-white border border-[#E2E8F0] shadow-xl rounded-xl p-4 flex gap-3 items-start animate-[slideIn_0.3s_ease-out]"
+             style="animation: slideIn 0.3s ease-out;">
+            <span class="text-2xl flex-shrink-0">{{ conquista.emblema.icone }}</span>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-[#94A3B8] uppercase tracking-widest mb-0.5">Você recebeu um emblema!</p>
+                <p class="font-bold text-[#0F172A] text-sm">{{ conquista.emblema.nome }}</p>
+                {% if conquista.emblema.evento %}
+                <p class="text-[11px] text-[#64748B]">{{ conquista.emblema.evento.titulo }}</p>
+                {% endif %}
+                <a href="{% url 'perfil' %}" class="text-[11px] font-bold text-[#1D4ED8] hover:underline mt-1 block">Ver meu perfil →</a>
+            </div>
+            <button onclick="fecharToastEmblema({{ conquista.pk }}, true)"
+                    class="text-[#94A3B8] hover:text-[#0F172A] transition-colors flex-shrink-0 mt-0.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <!-- Marca como lido automaticamente após 500ms -->
+            <span id="htmx-lido-{{ conquista.pk }}"
+                  hx-post="{% url 'emblema_marcar_lido' conquista.pk %}"
+                  hx-trigger="load delay:500ms"
+                  hx-swap="none"></span>
+        </div>
+        {% endfor %}
+    </div>
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+    </style>
+    <script>
+    function fecharToastEmblema(id, marcarLido) {
+        if (marcarLido) {
+            var span = document.getElementById('htmx-lido-' + id);
+            if (span) htmx.trigger(span, 'load');
+        }
+        var el = document.getElementById('toast-emblema-' + id);
+        if (el) {
+            el.style.opacity = '0'; el.style.transform = 'translateX(100%)';
+            el.style.transition = 'all 0.3s';
+            setTimeout(function() { el.remove(); }, 300);
+        }
+    }
+    </script>
+    {% endif %}
 
     <script src="{% static 'js/htmx.min.js' %}" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
