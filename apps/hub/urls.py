@@ -1,8 +1,11 @@
 from django.urls import include, path
 
-from . import views
+from . import views, views_explorar
 
 urlpatterns = [
+    path('explorar/', views_explorar.explorar, name='explorar'),
+    path('explorar/<int:user_id>/', views_explorar.perfil_usuario, name='perfil_usuario'),
+
     path('<slug:slug>/', views.hub_evento, name='hub_evento'),
     path('<slug:slug>/', include('apps.sessoes.urls')),
     path('<slug:slug>/documentos/', views.gerenciar_documentos, name='gerenciar_documentos_hub'),

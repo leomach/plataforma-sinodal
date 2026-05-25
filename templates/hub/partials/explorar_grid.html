@@ -1,0 +1,76 @@
+{% if page_obj.object_list %}
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="grid-usuarios">
+    {% for usuario in page_obj %}
+    <div
+        class="bg-white border border-[#E2E8F0] rounded-xl p-4 text-center cursor-pointer hover:shadow-md hover:border-[#1D4ED8]/40 transition-all select-none"
+        hx-get="{% url 'perfil_usuario' usuario.pk %}"
+        hx-target="#modal-perfil-content"
+        hx-swap="innerHTML"
+        hx-indicator="#modal-perfil-spinner"
+        onclick="document.getElementById('modal-perfil').classList.remove('hidden')"
+    >
+        {% if usuario.foto %}
+        <img src="{{ usuario.foto.url }}"
+             alt="{{ usuario.display_name }}"
+             class="w-16 h-16 rounded-full mx-auto mb-3 object-cover ring-2 ring-[#E2E8F0]">
+        {% else %}
+        <div class="w-16 h-16 rounded-full mx-auto mb-3 bg-[#1D4ED8] flex items-center justify-center font-bold text-xl text-white ring-2 ring-[#E2E8F0]">
+            {{ usuario.first_name|first|upper }}{{ usuario.last_name|first|upper }}
+        </div>
+        {% endif %}
+        <p class="font-semibold text-[#0F172A] text-sm leading-tight truncate">{{ usuario.display_name }}</p>
+        {% if usuario.bio %}
+        <p class="text-[11px] text-[#94A3B8] mt-1 line-clamp-2 leading-snug">{{ usuario.bio|truncatechars:60 }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Paginação -->
+{% if page_obj.has_other_pages %}
+<div class="flex items-center justify-center gap-2 mt-8">
+    {% if page_obj.has_previous %}
+    <button
+        hx-get="{% url 'explorar' %}?pagina={{ page_obj.previous_page_number }}{% if busca %}&q={{ busca }}{% endif %}{% if evento_id %}&evento={{ evento_id }}{% endif %}"
+        hx-target="#explorar-grid"
+        hx-swap="innerHTML"
+        hx-push-url="true"
+        class="px-4 py-2 text-xs font-bold text-[#1D4ED8] border border-[#1D4ED8]/30 hover:bg-[#1D4ED8] hover:text-white rounded-lg transition-all uppercase tracking-widest">
+        ← Anterior
+    </button>
+    {% endif %}
+
+    <span class="text-xs text-[#64748B] font-medium px-2">
+        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+    <button
+        hx-get="{% url 'explorar' %}?pagina={{ page_obj.next_page_number }}{% if busca %}&q={{ busca }}{% endif %}{% if evento_id %}&evento={{ evento_id }}{% endif %}"
+        hx-target="#explorar-grid"
+        hx-swap="innerHTML"
+        hx-push-url="true"
+        class="px-4 py-2 text-xs font-bold text-[#1D4ED8] border border-[#1D4ED8]/30 hover:bg-[#1D4ED8] hover:text-white rounded-lg transition-all uppercase tracking-widest">
+        Próxima →
+    </button>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="text-center py-16">
+    <div class="text-4xl mb-3">🔍</div>
+    <p class="text-[#64748B] text-sm">Nenhum participante encontrado.</p>
+    {% if busca or evento_id %}
+    <button
+        hx-get="{% url 'explorar' %}"
+        hx-target="#explorar-grid"
+        hx-swap="innerHTML"
+        hx-push-url="true"
+        onclick="document.getElementById('evento-hidden').value=''; document.getElementById('search-q').value='';"
+        class="mt-4 text-xs font-bold text-[#1D4ED8] hover:underline uppercase tracking-widest">
+        Limpar filtros
+    </button>
+    {% endif %}
+</div>
+{% endif %}
