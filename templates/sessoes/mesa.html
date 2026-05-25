@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Mesa Diretora — {{ sessao.nome }}{% endblock %}
+
+{% block content %}
+{{ inscricoes_para_js|json_script:"inscricoes-data" }}
+
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="{% url 'painel_sessao' evento.slug sessao.pk %}"
+            class="text-xs text-[#64748B] hover:text-[#1D4ED8] font-medium uppercase tracking-widest flex items-center gap-1 mb-2">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Voltar ao Painel
+        </a>
+        <h1 class="text-2xl font-bold text-[#0F172A] serif-title">Mesa Diretora</h1>
+        <p class="text-sm text-[#64748B] mt-1">{{ sessao.nome }} — {{ sessao.data_hora|date:"d/m/Y" }}</p>
+    </div>
+
+    {% if sessao_anterior %}
+    <div class="bg-[#1D4ED8]/5 border border-[#1D4ED8]/20 rounded-lg p-4 mb-6">
+        <div class="flex gap-3">
+            <svg class="w-4 h-4 text-[#1D4ED8] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-sm text-[#1D4ED8]">
+                <strong>Replicação automática:</strong> Campos pré-preenchidos com a composição de
+                <em>{{ sessao_anterior.nome }}</em>. Altere se necessário.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="post" id="mesa-form">
+        {% csrf_token %}
+        {{ form.membros_extras_json }}
+
+        <!-- Cargos fixos -->
+        <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-6 mb-4">
+            <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest mb-5">Cargos Fixos</p>
+
+            <!-- Presidente (obrigatório) -->
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-[#0F172A] uppercase tracking-widest mb-1.5">
+                    {{ form.presidente.label }} <span class="text-[#DC2626]">*</span>
+                </label>
+                {{ form.presidente }}
+                {% if form.presidente.errors %}
+                <p class="text-xs text-[#DC2626] mt-1">{{ form.presidente.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="border-t border-[#E2E8F0] my-5"></div>
+            <p class="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-4">Demais membros (opcionais)</p>
+
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-[#64748B] uppercase tracking-widest mb-1.5">{{ form.vice_presidente.label }}</label>
+                {{ form.vice_presidente }}
+            </div>
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-[#64748B] uppercase tracking-widest mb-1.5">{{ form.primeiro_secretario.label }}</label>
+                {{ form.primeiro_secretario }}
+            </div>
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-[#64748B] uppercase tracking-widest mb-1.5">{{ form.segundo_secretario.label }}</label>
+                {{ form.segundo_secretario }}
+            </div>
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-[#64748B] uppercase tracking-widest mb-1.5">{{ form.tesoureiro.label }}</label>
+                {{ form.tesoureiro }}
+            </div>
+            <div class="mb-0">
+                <label class="block text-xs font-bold text-[#64748B] uppercase tracking-widest mb-1.5">{{ form.secretario_executivo.label }}</label>
+                {{ form.secretario_executivo }}
+            </div>
+        </div>
+
+        <!-- Cargos personalizados (JSON dinâmico) -->
+        <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest">Cargos Personalizados</p>
+                    <p class="text-[10px] text-[#94A3B8] mt-0.5">Adicione quantos membros com cargos livres forem necessários.</p>
+                </div>
+                <button type="button" id="btn-add-extra"
+                    class="flex items-center gap-1 bg-[#F1F5F9] hover:bg-[#E2E8F0] border border-[#E2E8F0] text-[#0F172A] font-bold py-1.5 px-3 rounded-lg text-xs uppercase tracking-widest transition-all">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Adicionar
+                </button>
+            </div>
+
+            <!-- Container das linhas dinâmicas -->
+            <div id="extras-container" class="space-y-3"></div>
+
+            <p id="extras-empty-msg" class="text-xs text-[#94A3B8] italic text-center py-3">
+                Nenhum cargo personalizado adicionado.
+            </p>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit"
+                class="flex-1 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
+                Salvar Mesa Diretora
+            </button>
+            <a href="{% url 'painel_sessao' evento.slug sessao.pk %}"
+                class="px-6 border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] font-bold rounded-lg text-xs uppercase tracking-widest flex items-center transition-all">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+(function () {
+    const INSCRICOES = JSON.parse(document.getElementById('inscricoes-data').textContent);
+    const container  = document.getElementById('extras-container');
+    const emptyMsg   = document.getElementById('extras-empty-msg');
+    const jsonInput  = document.getElementById('id_membros_extras_json');
+
+    const SEL_CLS = 'flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 transition-all';
+    const INP_CLS = 'flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 transition-all';
+    const BTN_CLS = 'shrink-0 w-8 h-8 flex items-center justify-center rounded-lg border border-[#E2E8F0] text-[#94A3B8] hover:text-[#DC2626] hover:border-[#DC2626] text-lg font-bold transition-all';
+
+    function syncJson() {
+        const rows = container.querySelectorAll('[data-extra-row]');
+        const extras = [];
+        rows.forEach(row => {
+            const sel = row.querySelector('select');
+            const inp = row.querySelector('input[type="text"]');
+            if (sel && sel.value && inp && inp.value.trim()) {
+                const found = INSCRICOES.find(i => String(i.id) === String(sel.value));
+                extras.push({
+                    inscricao_id: parseInt(sel.value),
+                    nome: found ? found.nome : '',
+                    cargo_descricao: inp.value.trim(),
+                });
+            }
+        });
+        jsonInput.value = JSON.stringify(extras);
+        emptyMsg.style.display = container.children.length ? 'none' : '';
+    }
+
+    function buildSelect(selectedId) {
+        const sel = document.createElement('select');
+        sel.className = SEL_CLS;
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = '— Selecione a pessoa —';
+        sel.appendChild(empty);
+        INSCRICOES.forEach(i => {
+            const opt = document.createElement('option');
+            opt.value = i.id;
+            opt.textContent = i.nome;
+            if (String(i.id) === String(selectedId)) opt.selected = true;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener('change', syncJson);
+        return sel;
+    }
+
+    function addRow(data) {
+        const row = document.createElement('div');
+        row.setAttribute('data-extra-row', '1');
+        row.className = 'flex gap-2 items-center';
+
+        const sel = buildSelect(data ? data.inscricao_id : null);
+
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = INP_CLS;
+        inp.placeholder = 'Ex: Capelão da Mesa';
+        inp.maxLength = 100;
+        inp.value = data ? (data.cargo_descricao || '') : '';
+        inp.addEventListener('input', syncJson);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = BTN_CLS;
+        btn.title = 'Remover';
+        btn.innerHTML = '&times;';
+        btn.addEventListener('click', () => { row.remove(); syncJson(); });
+
+        row.appendChild(sel);
+        row.appendChild(inp);
+        row.appendChild(btn);
+        container.appendChild(row);
+        syncJson();
+    }
+
+    // Inicializa a partir do campo oculto
+    try {
+        const initial = JSON.parse(jsonInput.value || '[]');
+        initial.forEach(addRow);
+    } catch (e) {}
+
+    emptyMsg.style.display = container.children.length ? 'none' : '';
+
+    document.getElementById('btn-add-extra').addEventListener('click', () => addRow(null));
+    document.getElementById('mesa-form').addEventListener('submit', syncJson);
+})();
+</script>
+{% endblock %}

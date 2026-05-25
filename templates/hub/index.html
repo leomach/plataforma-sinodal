@@ -124,11 +124,73 @@
             <!-- BOTÃO DE GERENCIAMENTO (Visível apenas para Liderança) -->
             {% if is_lideranca %}
             <div class="bg-[#F1F5F9] border border-[#1D4ED8]/20 rounded-lg p-4">
-                <p class="text-[10px] font-bold text-[#1D4ED8] uppercase tracking-widest mb-3">Painel da Secretária</p>
-                <a href="{% url 'gerenciar_documentos_hub' evento.slug %}" class="flex items-center justify-center gap-2 w-full bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    Gerenciar Documentos
-                </a>
+                <p class="text-[10px] font-bold text-[#1D4ED8] uppercase tracking-widest mb-3">Painel da Liderança</p>
+                <div class="space-y-2">
+                    <a href="{% url 'lista_sessoes' evento.slug %}" class="flex items-center justify-center gap-2 w-full bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Sessões
+                    </a>
+                    <a href="{% url 'gerenciar_documentos_hub' evento.slug %}" class="flex items-center justify-center gap-2 w-full bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#1D4ED8] font-bold py-2.5 rounded-lg text-xs uppercase tracking-widest transition-all">
+                        Gerenciar Documentos
+                    </a>
+                    {% if sessao_ativa %}
+                    <a href="{% url 'leitor_presenca' evento.slug sessao_ativa.pk %}" class="flex items-center justify-center gap-2 w-full bg-[#00703C] hover:bg-green-800 text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4a8 8 0 100 16A8 8 0 0012 4zm0 0v4m0 8v-4m0 0h4m-4 0H8"/></svg>
+                        Leitor de Presença
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- QR Code do Delegado -->
+            {% if qr_svg %}
+            <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-5">
+                <h3 class="text-xs font-bold text-[#64748B] uppercase tracking-widest mb-4">Minha Credencial</h3>
+                <div class="flex flex-col items-center gap-3">
+                    <div class="bg-white border-2 border-[#E2E8F0] rounded-lg p-3 inline-block">
+                        {{ qr_svg|safe }}
+                    </div>
+                    <p class="text-[10px] text-[#64748B] text-center">Apresente este QR Code na entrada do plenário</p>
+                    {% if qr_token %}
+                    <p class="text-[10px] font-mono text-[#94A3B8] text-center break-all select-all px-1">{{ qr_token }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Votação Ativa -->
+            {% if votacao_ativa %}
+            <div class="bg-white border border-[#1D4ED8]/30 rounded-lg shadow-sm p-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="w-2 h-2 rounded-full bg-[#1D4ED8] animate-pulse"></span>
+                    <h3 class="text-xs font-bold text-[#1D4ED8] uppercase tracking-widest">Votação em Andamento</h3>
+                </div>
+                <p class="text-sm font-semibold text-[#0F172A] mb-4 leading-snug">{{ votacao_ativa.titulo }}</p>
+                {% if meu_voto %}
+                <div class="p-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg text-center">
+                    <p class="text-xs text-[#64748B]">Seu voto registrado:</p>
+                    <p class="font-bold text-[#0F172A] uppercase tracking-widest text-sm mt-0.5">{{ meu_voto.get_voto_display }}</p>
+                </div>
+                {% elif is_delegado %}
+                <form method="post" action="{% url 'registrar_voto' evento.slug votacao_ativa.pk %}" class="space-y-2">
+                    {% csrf_token %}
+                    <button type="submit" name="voto" value="favor"
+                        class="w-full bg-[#00703C] hover:bg-green-800 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all">
+                        A Favor
+                    </button>
+                    <button type="submit" name="voto" value="contra"
+                        class="w-full bg-[#DC2626] hover:bg-red-800 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all">
+                        Contra
+                    </button>
+                    <button type="submit" name="voto" value="abster"
+                        class="w-full bg-[#94A3B8] hover:bg-slate-500 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all">
+                        Abster-se
+                    </button>
+                </form>
+                {% else %}
+                <p class="text-xs text-[#64748B] italic text-center">Somente delegados e ex-officio podem votar.</p>
+                {% endif %}
             </div>
             {% endif %}
 

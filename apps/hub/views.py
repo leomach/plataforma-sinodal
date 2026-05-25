@@ -2,7 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from apps.eventos.models import Evento, Inscricao
-from .models import TipoDocumento, DocumentoEvento, Sessao
+from apps.sessoes.models import CredencialQRCode, Votacao
+from apps.sessoes.services.qrcode import gerar_qrcode_svg
+from .models import TipoDocumento, DocumentoEvento
 from .forms import DocumentoEventoForm, AtaSessaoRapidaForm
 from core import constants
 from functools import wraps
@@ -49,6 +51,29 @@ def hub_evento(request, evento, inscricao):
 
     # Agenda de Sessões
     sessoes = evento.sessoes.all().order_by('data_hora')
+    sessao_ativa = sessoes.filter(status__in=[2, 3]).first()  # CHAMADA ou ABERTA
+
+    # QR Code do delegado
+    qr_svg = None
+    qr_token = None
+    if is_delegado and inscricao.status == constants.STATUS_APROVADO:
+        try:
+            qr_obj = inscricao.qr_code
+            qr_svg = gerar_qrcode_svg(qr_obj.token)
+            qr_token = qr_obj.token
+        except CredencialQRCode.DoesNotExist:
+            pass
+
+    # Votação ativa para o delegado
+    votacao_ativa = None
+    meu_voto = None
+    if sessao_ativa:
+        votacao_ativa = sessao_ativa.votacoes.filter(status=Votacao.STATUS_ABERTA).first()
+        if votacao_ativa and is_delegado:
+            from apps.sessoes.models import VotoParticipante
+            meu_voto = VotoParticipante.objects.filter(
+                votacao=votacao_ativa, inscricao=inscricao
+            ).first()
 
     return render(request, 'hub/index.html', {
         'evento': evento,
@@ -56,8 +81,13 @@ def hub_evento(request, evento, inscricao):
         'atas_atuais': atas_atuais,
         'tipos_com_documentos': tipos_com_documentos,
         'sessoes': sessoes,
+        'sessao_ativa': sessao_ativa,
         'is_delegado': is_delegado,
         'is_lideranca': is_lideranca(request.user),
+        'qr_svg': qr_svg,
+        'qr_token': qr_token,
+        'votacao_ativa': votacao_ativa,
+        'meu_voto': meu_voto,
     })
 
 @login_required

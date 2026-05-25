@@ -12,6 +12,14 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-2q7jnn0^20c8^ui4k1hwjhfq2+
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://app.sinodalgaranhuns.com.br',
+    'https://*.ngrok-free.app',
+    'https://*.ngrok.io',
+    'https://*.lhr.life',
+    'https://*.serveo.net',
+]
+
 INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
     'django.contrib.admin',
@@ -26,6 +34,7 @@ INSTALLED_APPS = [
     'apps.eventos',
     'apps.usuarios',
     'apps.hub',
+    'apps.sessoes',
 ]
 
 MIDDLEWARE = [

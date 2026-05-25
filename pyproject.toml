@@ -19,6 +19,7 @@ cloudinary = "^1.44.2"
 django-cloudinary-storage = "^0.3.0"
 requests = "^2.33.1"
 dj-database-url = "^3.1.2"
+segno = "^1.6.1"
 
 [tool.poetry.group.dev.dependencies]
 django-debug-toolbar = "^6.0.0"

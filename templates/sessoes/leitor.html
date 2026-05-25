@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Leitor de Presença — {{ sessao.nome }}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <a href="{% url 'painel_sessao' evento.slug sessao.pk %}" class="text-xs text-[#64748B] hover:text-[#1D4ED8] font-bold uppercase tracking-widest flex items-center gap-1 mb-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Fechar Leitor
+            </a>
+            <h1 class="font-bold text-[#0F172A] serif-title">Leitor de Presença</h1>
+            <p class="text-xs text-[#64748B]">{{ sessao.nome }} — {{ sessao.get_status_display }}</p>
+        </div>
+        <!-- Quórum em tempo real -->
+        <div id="quorum-leitor"
+            hx-get="{% url 'contagem_presenca' evento.slug sessao.pk %}"
+            hx-trigger="every 10s"
+            hx-swap="innerHTML">
+            {% include "sessoes/partials/quorum.html" %}
+        </div>
+    </div>
+
+    <!-- Viewfinder QR -->
+    <div id="reader-container" class="bg-[#0F172A] rounded-xl overflow-hidden mb-4 shadow-lg">
+        <div id="reader" class="w-full"></div>
+    </div>
+
+    <!-- Card de confirmação (aparece após leitura do QR) -->
+    <div id="confirmacao" class="hidden mb-4 bg-white border-2 border-[#1D4ED8] rounded-xl p-5 shadow-lg">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-[#1D4ED8]/10 rounded-full flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-[#1D4ED8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4a8 8 0 100 16A8 8 0 0012 4zm0 0v4m0 8v-4m0 0h4m-4 0H8"/></svg>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest">QR Code lido</p>
+                <p class="text-sm font-bold text-[#0F172A]">Confirmar registro de presença?</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="confirmar()"
+                class="flex-1 bg-[#00703C] hover:bg-green-800 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all">
+                Confirmar
+            </button>
+            <button onclick="cancelar()"
+                class="flex-1 bg-[#F1F5F9] hover:bg-slate-200 text-[#64748B] font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all">
+                Cancelar
+            </button>
+        </div>
+    </div>
+
+    <!-- Feedback visual (após confirmação) -->
+    <div id="feedback" class="hidden mb-4 p-4 rounded-xl text-center transition-all">
+        <p id="feedback-nome" class="font-bold text-lg"></p>
+        <p id="feedback-papel" class="text-sm opacity-80"></p>
+        <p id="feedback-status" class="text-xs font-bold uppercase tracking-widest mt-1"></p>
+    </div>
+
+    <!-- Entrada manual (fallback) -->
+    <div class="bg-white border border-[#E2E8F0] rounded-xl p-5">
+        <p class="text-xs font-bold text-[#64748B] uppercase tracking-widest mb-3">Entrada Manual de Token</p>
+        <div class="flex gap-2">
+            <input type="text" id="token-manual" placeholder="SINODAL-..."
+                class="flex-1 border border-[#E2E8F0] rounded-lg px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8] transition-all font-mono"
+            >
+            <button onclick="submeterManual()"
+                class="bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-2.5 px-5 rounded-lg text-xs uppercase tracking-widest transition-all">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+const TOGGLE_URL = "{% url 'toggle_presenca' evento.slug sessao.pk %}";
+const CSRF_TOKEN = "{{ csrf_token }}";
+
+let tokenPendente = null;
+let html5Qr = null;
+
+// ─── Câmera ──────────────────────────────────────────────────────────────────
+
+function readerMsg(html) {
+    document.getElementById('reader').innerHTML =
+        `<div class="text-white text-sm text-center py-10 px-6 space-y-2">${html}</div>`;
+}
+
+function iniciarCamera() {
+    document.getElementById('reader').innerHTML = '';
+    document.getElementById('reader-container').classList.remove('hidden');
+    html5Qr = new Html5Qrcode('reader');
+    html5Qr.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (texto) => aoLerQR(texto),
+        () => {}
+    ).catch((err) => {
+        const negado = err && err.toString().includes('ermission');
+        readerMsg(negado
+            ? `<p class="font-bold">Permissão de câmera negada</p>
+               <p class="text-white/70 text-xs">Permita o acesso nas configurações do navegador e recarregue.</p>`
+            : `<p class="font-bold">Câmera não disponível</p>
+               <p class="text-white/70 text-xs">Use o campo de token manual abaixo.</p>`
+        );
+    });
+}
+
+async function pararCamera() {
+    if (html5Qr) {
+        try { await html5Qr.stop(); } catch(e) {}
+        html5Qr = null;
+    }
+}
+
+// ─── Fluxo de leitura ─────────────────────────────────────────────────────────
+
+function aoLerQR(token) {
+    token = token.trim();
+    if (!token || tokenPendente) return;  // ignora novas leituras enquanto há pendente
+    tokenPendente = token;
+    pararCamera().then(() => {
+        document.getElementById('reader-container').classList.add('hidden');
+        document.getElementById('confirmacao').classList.remove('hidden');
+    });
+}
+
+async function confirmar() {
+    if (!tokenPendente) return;
+    const token = tokenPendente;
+    tokenPendente = null;
+    document.getElementById('confirmacao').classList.add('hidden');
+    await processarToken(token);
+}
+
+function cancelar() {
+    tokenPendente = null;
+    document.getElementById('confirmacao').classList.add('hidden');
+    ocultarFeedback();
+    iniciarCamera();
+}
+
+// ─── Processamento do token ───────────────────────────────────────────────────
+
+async function processarToken(token) {
+    token = token.trim();
+    if (!token) return;
+    try {
+        const resp = await fetch(TOGGLE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+            body: JSON.stringify({ token }),
+        });
+        const data = await resp.json();
+        mostrarFeedback(data);
+        setTimeout(() => {
+            ocultarFeedback();
+            iniciarCamera();
+        }, 2500);
+    } catch (e) {
+        mostrarErro('Erro de conexão.');
+        setTimeout(() => {
+            ocultarFeedback();
+            iniciarCamera();
+        }, 2000);
+    }
+}
+
+function submeterManual() {
+    const val = document.getElementById('token-manual').value.trim();
+    if (!val) return;
+    document.getElementById('token-manual').value = '';
+    // entrada manual não passa pelo card de confirmação — opera diretamente
+    processarToken(val);
+}
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+
+function mostrarFeedback(data) {
+    const el = document.getElementById('feedback');
+    el.className = 'mb-4 p-4 rounded-xl text-center border';
+    if (!data.ok) {
+        el.classList.add('bg-[#FEF2F2]', 'border-[#DC2626]', 'text-[#DC2626]');
+        document.getElementById('feedback-nome').textContent = 'Erro';
+        document.getElementById('feedback-papel').textContent = data.erro || 'Token inválido';
+        document.getElementById('feedback-status').textContent = '';
+    } else if (data.presente) {
+        el.classList.add('bg-[#F0FDF4]', 'border-[#00703C]', 'text-[#00703C]');
+        document.getElementById('feedback-nome').textContent = data.nome;
+        document.getElementById('feedback-papel').textContent = data.papel;
+        document.getElementById('feedback-status').textContent = '✓ Entrou no plenário';
+    } else {
+        el.classList.add('bg-[#FEF9C3]', 'border-[#F59E0B]', 'text-[#D97706]');
+        document.getElementById('feedback-nome').textContent = data.nome;
+        document.getElementById('feedback-papel').textContent = data.papel;
+        document.getElementById('feedback-status').textContent = '↩ Retirou-se do plenário';
+    }
+}
+
+function mostrarErro(msg) {
+    const el = document.getElementById('feedback');
+    el.className = 'mb-4 p-4 rounded-xl text-center border bg-[#FEF2F2] border-[#DC2626] text-[#DC2626]';
+    document.getElementById('feedback-nome').textContent = 'Erro';
+    document.getElementById('feedback-papel').textContent = msg;
+    document.getElementById('feedback-status').textContent = '';
+}
+
+function ocultarFeedback() {
+    document.getElementById('feedback').classList.add('hidden');
+}
+
+// ─── Inicialização ────────────────────────────────────────────────────────────
+
+const host = window.location.hostname;
+const isSecureContext = window.isSecureContext || host === 'localhost' || host === '127.0.0.1';
+
+if (!isSecureContext || !navigator.mediaDevices) {
+    readerMsg(`
+        <p class="font-bold text-base">Câmera bloqueada pelo navegador</p>
+        <p class="text-white/70 text-xs leading-relaxed">Acesso à câmera requer <strong>HTTPS</strong>. Em rede local (IP), o browser bloqueia por segurança.</p>
+        <p class="text-white/50 text-[10px] mt-3 font-mono">Execute: ssh -R 80:localhost:8000 localhost.run</p>
+    `);
+} else {
+    iniciarCamera();
+}
+
+window.addEventListener('beforeunload', () => pararCamera());
+
+// Enter no campo manual
+document.getElementById('token-manual').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submeterManual();
+});
+</script>
+{% endblock %}

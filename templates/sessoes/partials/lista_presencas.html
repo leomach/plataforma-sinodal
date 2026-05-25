@@ -1,0 +1,104 @@
+<div id="lista-presencas-content">
+
+    <!-- Busca client-side -->
+    <div class="mb-4">
+        <input
+            type="text"
+            id="busca-presenca"
+            placeholder="Buscar participante..."
+            oninput="filtrarPresencas(this.value)"
+            class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]/30 focus:border-[#1D4ED8] transition-all"
+            autocomplete="off"
+        >
+    </div>
+
+    <!-- Presentes -->
+    <div class="mb-5">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="text-[10px] font-bold text-[#00703C] uppercase tracking-widest">Presentes</span>
+            <span class="text-[10px] font-bold text-[#00703C] bg-[#00703C]/10 border border-[#00703C]/20 px-1.5 py-0.5 rounded-full">{{ presentes|length }}</span>
+        </div>
+        {% if presentes %}
+        <ul class="space-y-1.5" id="lista-presentes">
+            {% for p in presentes %}
+            <li class="participante-item flex items-center justify-between gap-3 p-2.5 rounded-lg bg-[#F0FDF4] border border-[#00703C]/15"
+                data-nome="{{ p.inscricao.usuario.get_full_name|lower }}">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-2 h-2 rounded-full bg-[#00703C] shrink-0"></div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-[#0F172A] truncate">{{ p.inscricao.usuario.get_full_name|default:p.inscricao.usuario.username }}</p>
+                        <p class="text-[10px] text-[#64748B]">{{ p.inscricao.get_papel_evento_display }}</p>
+                    </div>
+                </div>
+                <form
+                    hx-post="{% url 'toggle_presenca_admin' evento.slug sessao.pk %}"
+                    hx-target="#lista-presencas-content"
+                    hx-swap="outerHTML"
+                    class="shrink-0"
+                >
+                    {% csrf_token %}
+                    <input type="hidden" name="inscricao_id" value="{{ p.inscricao.pk }}">
+                    <button type="submit"
+                        class="text-[9px] font-bold text-[#00703C] border border-[#00703C]/40 hover:bg-[#00703C] hover:text-white px-2.5 py-1 rounded-full uppercase tracking-widest transition-all"
+                        title="Marcar ausente">
+                        ✓ Presente
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-xs text-[#64748B] italic py-2 pl-1">Nenhum participante presente.</p>
+        {% endif %}
+    </div>
+
+    <!-- Ausentes -->
+    <div>
+        <div class="flex items-center gap-2 mb-2">
+            <span class="text-[10px] font-bold text-[#64748B] uppercase tracking-widest">Ausentes</span>
+            <span class="text-[10px] font-bold text-[#64748B] bg-[#F1F5F9] border border-[#E2E8F0] px-1.5 py-0.5 rounded-full">{{ ausentes|length }}</span>
+        </div>
+        {% if ausentes %}
+        <ul class="space-y-1.5" id="lista-ausentes">
+            {% for p in ausentes %}
+            <li class="participante-item flex items-center justify-between gap-3 p-2.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]"
+                data-nome="{{ p.inscricao.usuario.get_full_name|lower }}">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-2 h-2 rounded-full bg-[#CBD5E1] shrink-0"></div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-[#0F172A] truncate">{{ p.inscricao.usuario.get_full_name|default:p.inscricao.usuario.username }}</p>
+                        <p class="text-[10px] text-[#64748B]">{{ p.inscricao.get_papel_evento_display }}</p>
+                    </div>
+                </div>
+                <form
+                    hx-post="{% url 'toggle_presenca_admin' evento.slug sessao.pk %}"
+                    hx-target="#lista-presencas-content"
+                    hx-swap="outerHTML"
+                    class="shrink-0"
+                >
+                    {% csrf_token %}
+                    <input type="hidden" name="inscricao_id" value="{{ p.inscricao.pk }}">
+                    <button type="submit"
+                        class="text-[9px] font-bold text-[#64748B] border border-[#E2E8F0] hover:bg-[#1D4ED8] hover:text-white hover:border-[#1D4ED8] px-2.5 py-1 rounded-full uppercase tracking-widest transition-all"
+                        title="Marcar presente">
+                        Marcar
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-xs text-[#64748B] italic py-2 pl-1">Todos os participantes estão presentes.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function filtrarPresencas(termo) {
+    termo = termo.toLowerCase().trim();
+    document.querySelectorAll('.participante-item').forEach(function(item) {
+        const nome = item.getAttribute('data-nome') || '';
+        item.style.display = (!termo || nome.includes(termo)) ? '' : 'none';
+    });
+}
+</script>
