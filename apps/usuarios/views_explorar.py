@@ -30,7 +30,7 @@ def _qs_usuarios(evento_id, busca):
             inscricoes__evento_id=evento_id,
         )
     else:
-        qs = User.objects.filter(inscricoes__status=constants.STATUS_APROVADO)
+        qs = User.objects.all()
 
     if busca:
         qs = qs.filter(Q(first_name__icontains=busca) | Q(last_name__icontains=busca))
@@ -44,11 +44,8 @@ def _qs_usuarios(evento_id, busca):
 
 @login_required
 def explorar(request):
-    meus_eventos = list(
-        Evento.objects.filter(
-            inscritos__usuario=request.user,
-            inscritos__status=constants.STATUS_APROVADO,
-        )
+    todos_eventos = list(
+        Evento.objects.all()
         .distinct()
         .order_by('-data_inicio')
     )
@@ -62,14 +59,14 @@ def explorar(request):
 
     ctx = {
         'page_obj': page_obj,
-        'meus_eventos': meus_eventos,
+        'todos_eventos': todos_eventos,
         'evento_id': evento_id,
         'busca': busca,
     }
 
     if request.headers.get('HX-Request'):
-        return render(request, 'hub/partials/explorar_grid.html', ctx)
-    return render(request, 'hub/explorar.html', ctx)
+        return render(request, 'usuarios/partials/explorar_grid.html', ctx)
+    return render(request, 'usuarios/explorar.html', ctx)
 
 
 def _whatsapp_link(numero):
@@ -102,7 +99,7 @@ def perfil_usuario(request, user_id):
         ),
         pk=user_id,
     )
-    return render(request, 'hub/partials/perfil_usuario.html', {
+    return render(request, 'usuarios/partials/perfil_usuario.html', {
         'perfil': usuario,
         'whatsapp_link': _whatsapp_link(usuario.whatsapp),
     })
