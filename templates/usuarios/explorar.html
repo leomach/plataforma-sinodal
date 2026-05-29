@@ -39,7 +39,7 @@
         </div>
 
         <!-- Filtros de evento -->
-        {% if meus_eventos %}
+        {% if todos_eventos %}
         <div class="flex flex-wrap gap-2">
             <button
                 onclick="selecionarEvento('')"
@@ -48,7 +48,7 @@
                 data-evento="">
                 Todos
             </button>
-            {% for ev in meus_eventos %}
+            {% for ev in todos_eventos %}
             <button
                 onclick="selecionarEvento('{{ ev.pk }}')"
                 class="filtro-pill text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all
@@ -68,7 +68,7 @@
 
     <!-- Grid (substituído via HTMX em busca/filtro/paginação) -->
     <div id="explorar-grid">
-        {% include "hub/partials/explorar_grid.html" %}
+        {% include "usuarios/partials/explorar_grid.html" %}
     </div>
 
 </div>
