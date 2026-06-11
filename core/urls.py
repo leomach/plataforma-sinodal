@@ -3,7 +3,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from apps.usuarios import views as usuario_views
-from apps.eventos import views as evento_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -12,7 +11,7 @@ urlpatterns = [
     path('eventos/', include('apps.eventos.urls')),
     path('hub/', include('apps.hub.urls')),
     path('premiacoes/', include('apps.emblemas.urls')),
-    path('webhooks/infinitepay/<str:token>/', evento_views.webhook_infinitepay, name='webhook_infinitepay'),
+    path('', include('apps.pagamentos.urls')),
 ]
 
 if settings.DEBUG:

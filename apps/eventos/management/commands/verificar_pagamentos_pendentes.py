@@ -35,6 +35,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(
                         f'  ✓ Pago: {inscricao.usuario.short_name} — {inscricao.evento.titulo}'
                     ))
+                    emails.enviar_pagamento_confirmado(inscricao)
                     if inscricao.status == constants.STATUS_APROVADO and status_anterior != constants.STATUS_APROVADO:
                         emails.enviar_inscricao_aprovada(inscricao)
             except Exception as exc:
