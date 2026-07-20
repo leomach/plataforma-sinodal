@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}{{ usuario.display_name }} - Gerenciar Usuários{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Voltar -->
+    <a href="{% url 'gerenciar_usuarios' %}" class="inline-flex items-center gap-2 text-sm font-bold text-text-muted hover:text-primary transition-colors mb-6">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        Voltar para Gerenciar Usuários
+    </a>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Coluna: Identidade + Ações -->
+        <div class="space-y-6">
+            <div class="card flex flex-col items-center text-center py-10">
+                <div class="w-28 h-28 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-xl overflow-hidden bg-gradient-to-tr from-primary to-blue-400">
+                    {% if usuario.foto %}
+                        <img src="{{ usuario.foto.url }}" alt="{{ usuario.display_name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        {{ usuario.display_name|slice:":1" }}
+                    {% endif %}
+                </div>
+                <div class="mt-5 w-full px-4 min-w-0">
+                    <h2 class="text-2xl font-bold text-text-main truncate serif-title !text-text-main">{{ usuario.display_name }}</h2>
+                    <p class="text-text-muted text-sm italic truncate">@{{ usuario.username }}</p>
+                    <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+                        <span class="{% if usuario.tipo == 2 %} badge-success {% else %} badge-primary {% endif %}">{{ usuario.get_tipo_display }}</span>
+                        {% if usuario.is_superuser %}
+                        <span class="badge bg-red-100 text-red-600 border border-red-200">Superuser</span>
+                        {% endif %}
+                        {% if usuario.is_active %}
+                        <span class="badge-success">Ativo</span>
+                        {% else %}
+                        <span class="badge-neutral">Inativo</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações Administrativas -->
+            <div class="card space-y-4">
+                <h3 class="text-sm font-bold text-text-muted uppercase tracking-wider">Ações</h3>
+
+                <a href="{% url 'editar_usuario' usuario.id %}" class="btn-primary w-full">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    Editar Dados
+                </a>
+
+                {% if not usuario.is_superuser %}
+                <form method="post" action="{% url 'resetar_senha_usuario' usuario.id %}"
+                      onsubmit="return confirm('Resetar a senha de {{ usuario.display_name|escapejs }}?\n\nA nova senha passará a ser o nome de usuário (@{{ usuario.username|escapejs }}).');">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="btn-outline w-full">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                        Resetar Senha
+                    </button>
+                </form>
+
+                <form method="post" action="{% url 'toggle_ativo_usuario' usuario.id %}"
+                      onsubmit="return confirm('{% if usuario.is_active %}Desativar{% else %}Reativar{% endif %} o acesso de {{ usuario.display_name|escapejs }}?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    {% if usuario.is_active %}
+                    <button type="submit" class="btn-outline w-full border-error text-error hover:bg-error hover:text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                        Desativar Acesso
+                    </button>
+                    {% else %}
+                    <button type="submit" class="btn-tertiary w-full">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        Reativar Acesso
+                    </button>
+                    {% endif %}
+                </form>
+
+                <p class="text-[11px] text-text-muted leading-relaxed pt-1">
+                    O <strong>reset de senha</strong> transforma a senha no próprio nome de usuário. O usuário poderá entrar com o mesmo texto no login e na senha, e trocá-la depois em <em>Meu Perfil → Segurança</em>.
+                </p>
+                {% else %}
+                <p class="text-[11px] text-text-muted leading-relaxed">
+                    Este é um <strong>superusuário</strong>. Reset de senha e desativação devem ser feitos pelo painel administrativo do Django.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Coluna: Informações -->
+        <div class="lg:col-span-2 space-y-8 min-w-0">
+            <!-- Dados de Contato -->
+            <div class="card">
+                <h3 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-5">Informações da Conta</h3>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                    <div>
+                        <dt class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Nome completo</dt>
+                        <dd class="text-sm font-medium text-text-main mt-1">{{ usuario.get_full_name|default:"—" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Nome de usuário</dt>
+                        <dd class="text-sm font-medium text-text-main mt-1">@{{ usuario.username }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] font-bold text-text-muted uppercase tracking-widest">E-mail</dt>
+                        <dd class="text-sm font-medium text-text-main mt-1 break-all">{{ usuario.email|default:"—" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] font-bold text-text-muted uppercase tracking-widest">WhatsApp</dt>
+                        <dd class="text-sm font-medium text-text-main mt-1">{{ usuario.whatsapp|default:"—" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Cadastrado em</dt>
+                        <dd class="text-sm font-medium text-text-main mt-1">{{ usuario.date_joined|date:"d/m/Y" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Último acesso</dt>
+                        <dd class="text-sm font-medium text-text-main mt-1">{{ usuario.last_login|date:"d/m/Y H:i"|default:"Nunca acessou" }}</dd>
+                    </div>
+                </dl>
+                {% if usuario.bio %}
+                <div class="mt-5 pt-5 border-t border-border">
+                    <dt class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Bio</dt>
+                    <dd class="text-sm text-text-main mt-1 whitespace-pre-line">{{ usuario.bio }}</dd>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Eventos -->
+            <div class="card">
+                <h3 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4">Inscrições em Eventos ({{ inscricoes|length }})</h3>
+                <div class="space-y-3">
+                    {% for inscricao in inscricoes %}
+                    <div class="flex items-center justify-between gap-3 py-2 border-b border-border last:border-0">
+                        <div class="min-w-0">
+                            <p class="font-bold text-text-main truncate">{{ inscricao.evento.titulo }}</p>
+                            <p class="text-[10px] text-text-muted uppercase font-bold tracking-widest">{{ inscricao.get_papel_evento_display }} · {{ inscricao.data_inscricao|date:"d/m/Y" }}</p>
+                        </div>
+                        <span class="{% if inscricao.status == 2 %} badge-success {% elif inscricao.status == 3 %} badge-error {% else %} badge-warning {% endif %} flex-shrink-0">
+                            {{ inscricao.get_status_display }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-text-muted italic py-2">Nenhuma inscrição em eventos.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Emblemas -->
+            <div class="card">
+                <h3 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4">Emblemas ({{ emblemas|length }})</h3>
+                {% if emblemas %}
+                <div class="flex flex-wrap gap-2">
+                    {% for eu in emblemas %}
+                    <div class="flex items-center gap-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2" title="{{ eu.emblema.descricao }}">
+                        <span class="text-xl leading-none">{{ eu.emblema.icone }}</span>
+                        <div>
+                            <p class="text-xs font-bold text-[#0F172A] leading-tight">{{ eu.emblema.nome }}</p>
+                            {% if eu.emblema.evento %}
+                            <p class="text-[10px] text-[#94A3B8]">{{ eu.emblema.evento.titulo }}</p>
+                            {% else %}
+                            <p class="text-[10px] text-[#94A3B8]">{{ eu.concedido_em|date:"d/m/Y" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-text-muted italic py-2">Nenhum emblema concedido.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
