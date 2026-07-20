@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'cloudinary_storage',
     'cloudinary',
     'django_htmx',
@@ -36,6 +37,7 @@ INSTALLED_APPS = [
     'apps.hub',
     'apps.sessoes',
     'apps.emblemas',
+    'apps.pagamentos',
 ]
 
 MIDDLEWARE = [
@@ -145,6 +147,7 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plataformasinodal.
 # InfinitePay
 INFINITEPAY_HANDLE = os.getenv('INFINITEPAY_HANDLE', '')
 INFINITEPAY_WEBHOOK_SECRET = os.getenv('INFINITEPAY_WEBHOOK_SECRET', '')
+INFINITEPAY_SANDBOX = os.getenv('INFINITEPAY_SANDBOX', 'False') == 'True'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'usuarios.User'

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ usuario.display_name }} - Gerenciar Usuários{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <a href="{% url 'detalhes_usuario' usuario.id %}" class="inline-flex items-center gap-2 text-sm font-bold text-text-muted hover:text-primary transition-colors mb-6">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        Voltar para os detalhes
+    </a>
+
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-primary serif-title !text-primary">Editar Usuário</h2>
+        <p class="text-text-muted mt-1">Alterando os dados de <span class="font-bold">@{{ usuario.username }}</span>.</p>
+    </div>
+
+    <div class="card">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-4 bg-error/10 border border-error/20 rounded-lg">
+                    {% for error in form.non_field_errors %}
+                        <p class="text-error text-sm font-medium">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for field in form %}
+                <div class="space-y-2 {% if field.name == 'username' or field.name == 'email' %}md:col-span-2{% endif %}">
+                    <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-text-main">{{ field.label }}</label>
+                    <input type="{{ field.field.widget.input_type|default:'text' }}"
+                           name="{{ field.html_name }}"
+                           id="{{ field.id_for_label }}"
+                           class="input-field"
+                           placeholder="{{ field.field.widget.attrs.placeholder|default:'' }}"
+                           {% if field.value %}value="{{ field.value }}"{% endif %}>
+                    {% if field.help_text %}
+                        <p class="text-text-muted text-[10px]">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% if field.errors %}<p class="text-error text-xs font-medium">{{ field.errors.0 }}</p>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="pt-6 border-t border-border flex flex-col sm:flex-row justify-end gap-3">
+                <a href="{% url 'detalhes_usuario' usuario.id %}" class="btn-outline w-full sm:w-auto">Cancelar</a>
+                <button type="submit" class="btn-primary w-full sm:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

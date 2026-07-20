@@ -1,16 +1,12 @@
-import json
 import logging
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.http import JsonResponse, Http404
 from django.urls import reverse
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Exists, OuterRef
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
 from django.conf import settings
 
 from .models import Evento, Inscricao, CampoEvento, RespostaInscricao
@@ -224,8 +220,10 @@ def gerenciar_campos_evento(request, slug):
 @user_passes_test(is_lideranca)
 def gerenciar_inscricoes(request, slug):
     from apps.sessoes.models import CredencialQRCode
+    from django.db.models import Q
     evento = get_object_or_404(Evento, slug=slug)
     filtro = request.GET.get('filtro', '')
+    q = request.GET.get('q', '').strip()
     inscricoes = (
         Inscricao.objects.filter(evento=evento)
         .select_related('usuario')
@@ -251,10 +249,18 @@ def gerenciar_inscricoes(request, slug):
             tem_qr=False,
         )
 
+    if q:
+        inscricoes = inscricoes.filter(
+            Q(usuario__first_name__unaccent__icontains=q) |
+            Q(usuario__last_name__unaccent__icontains=q) |
+            Q(usuario__username__unaccent__icontains=q)
+        )
+
     return render(request, 'eventos/inscricoes.html', {
         'evento': evento,
         'inscricoes': inscricoes,
         'filtro_ativo': filtro,
+        'q': q,
         'MANUAL': constants.MANUAL,
         'INFINITEPAY': constants.INFINITEPAY,
         'PAPEL_DELEGADO': constants.PAPEL_DELEGADO,
@@ -351,6 +357,10 @@ def gerar_link_pagamento(request, inscricao_id):
         messages.info(request, 'Seu pagamento já foi confirmado.')
         return redirect('confirmacao_inscricao', slug=evento.slug)
 
+    # Reutiliza link existente se ainda for válido (regenerar com query param ?force=1)
+    if inscricao.infinitepay_url and not request.GET.get('force'):
+        return redirect(inscricao.infinitepay_url)
+
     try:
         redirect_url = request.build_absolute_uri(
             reverse('confirmacao_inscricao', kwargs={'slug': evento.slug})
@@ -376,48 +386,6 @@ def gerar_link_pagamento(request, inscricao_id):
         return redirect(inscricao.infinitepay_url)
 
     return redirect('confirmacao_inscricao', slug=evento.slug)
-
-
-@csrf_exempt
-@require_POST
-def webhook_infinitepay(request, token):
-    if token != settings.INFINITEPAY_WEBHOOK_SECRET:
-        raise Http404
-
-    try:
-        payload = json.loads(request.body)
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        return JsonResponse({'error': 'invalid payload'}, status=400)
-
-    order_nsu = payload.get('order_nsu', '')
-    if not order_nsu.startswith('inscricao-'):
-        return JsonResponse({'ok': True})
-
-    try:
-        inscricao_id = int(order_nsu.split('-', 1)[1])
-        inscricao = Inscricao.objects.select_related('usuario', 'evento').get(pk=inscricao_id)
-    except (ValueError, Inscricao.DoesNotExist):
-        return JsonResponse({'ok': True})
-
-    if inscricao.pago:
-        return JsonResponse({'ok': True})
-
-    # O webhook só é disparado pela InfinitePay quando o pagamento é aprovado,
-    # portanto podemos confirmar diretamente sem consulta adicional.
-    invoice_slug = payload.get('invoice_slug', '')
-    if invoice_slug and not inscricao.infinitepay_link_id:
-        Inscricao.objects.filter(pk=inscricao.pk).update(infinitepay_link_id=invoice_slug)
-        inscricao.infinitepay_link_id = invoice_slug
-
-    status_anterior = inscricao.status
-    inscricao.pago = True
-    inscricao.data_pagamento = timezone.now()
-    inscricao.save()
-    emails.enviar_pagamento_confirmado(inscricao)
-    if inscricao.status == constants.STATUS_APROVADO and status_anterior != constants.STATUS_APROVADO:
-        emails.enviar_inscricao_aprovada(inscricao)
-
-    return JsonResponse({'ok': True})
 
 
 @login_required

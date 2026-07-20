@@ -63,9 +63,14 @@
                                 <div class="min-w-0">
                                     <div class="font-bold text-text-main leading-tight truncate serif-title">{{ usuario.display_name }}</div>
                                     <div class="text-xs text-text-muted truncate">@{{ usuario.username }}</div>
-                                    {% if usuario.is_superuser %}
-                                    <span class="inline-block mt-1 text-[8px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest border border-red-200">Superuser</span>
-                                    {% endif %}
+                                    <div class="flex flex-wrap gap-1 mt-1">
+                                        {% if usuario.is_superuser %}
+                                        <span class="inline-block text-[8px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest border border-red-200">Superuser</span>
+                                        {% endif %}
+                                        {% if not usuario.is_active %}
+                                        <span class="inline-block text-[8px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest border border-slate-300">Inativo</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </td>
@@ -82,18 +87,28 @@
                             <div class="flex items-center justify-end gap-2">
                                 {% if not usuario.is_superuser %}
                                     {% if usuario.tipo == 1 %}
-                                    <a href="{% url 'promover_usuario' usuario.id %}" 
+                                    <a href="{% url 'promover_usuario' usuario.id %}"
                                        class="btn-tertiary px-3 py-1.5 text-[9px] uppercase tracking-widest font-black">
                                         Promover
                                     </a>
                                     {% else %}
-                                    <a href="{% url 'rebaixar_usuario' usuario.id %}" 
+                                    <a href="{% url 'rebaixar_usuario' usuario.id %}"
                                        class="btn-outline px-3 py-1.5 text-[9px] uppercase tracking-widest font-black border-error text-error hover:bg-error hover:text-white">
                                         Rebaixar
                                     </a>
                                     {% endif %}
+                                    <form method="post" action="{% url 'resetar_senha_usuario' usuario.id %}"
+                                          onsubmit="return confirm('Resetar a senha de {{ usuario.display_name|escapejs }}?\n\nA nova senha passará a ser o nome de usuário (@{{ usuario.username|escapejs }}).');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit"
+                                                class="btn-outline px-3 py-1.5 text-[9px] uppercase tracking-widest font-black"
+                                                title="Redefine a senha para o nome de usuário">
+                                            Resetar senha
+                                        </button>
+                                    </form>
                                 {% endif %}
-                                <a href="#" class="btn-outline p-2 border-none text-text-muted hover:text-primary transition-all" title="Ver Detalhes">
+                                <a href="{% url 'detalhes_usuario' usuario.id %}" class="btn-outline p-2 border-none text-text-muted hover:text-primary transition-all" title="Ver Detalhes">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                                 </a>
                             </div>
