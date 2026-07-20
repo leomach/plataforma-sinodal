@@ -33,7 +33,7 @@ def _qs_usuarios(evento_id, busca):
         qs = User.objects.all()
 
     if busca:
-        qs = qs.filter(Q(first_name__icontains=busca) | Q(last_name__icontains=busca))
+        qs = qs.filter(Q(first_name__unaccent__icontains=busca) | Q(last_name__unaccent__icontains=busca))
 
     return (
         qs.distinct()

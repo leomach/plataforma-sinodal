@@ -182,8 +182,8 @@ def selecionar_destinatarios(request, emblema_id):
             ).distinct()
         if q:
             inscricoes = inscricoes.filter(
-                Q(usuario__first_name__icontains=q) |
-                Q(usuario__last_name__icontains=q)
+                Q(usuario__first_name__unaccent__icontains=q) |
+                Q(usuario__last_name__unaccent__icontains=q)
             )
         inscricoes = inscricoes.order_by('usuario__first_name', 'usuario__last_name')
         participantes = [
@@ -193,7 +193,7 @@ def selecionar_destinatarios(request, emblema_id):
     else:
         qs = User.objects.filter(is_active=True)
         if q:
-            qs = qs.filter(Q(first_name__icontains=q) | Q(last_name__icontains=q))
+            qs = qs.filter(Q(first_name__unaccent__icontains=q) | Q(last_name__unaccent__icontains=q))
         else:
             # Sem busca e sem evento: limita a 100 para não carregar toda a plataforma
             qs = qs.none() if not q else qs

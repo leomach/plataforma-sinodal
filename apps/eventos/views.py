@@ -220,8 +220,10 @@ def gerenciar_campos_evento(request, slug):
 @user_passes_test(is_lideranca)
 def gerenciar_inscricoes(request, slug):
     from apps.sessoes.models import CredencialQRCode
+    from django.db.models import Q
     evento = get_object_or_404(Evento, slug=slug)
     filtro = request.GET.get('filtro', '')
+    q = request.GET.get('q', '').strip()
     inscricoes = (
         Inscricao.objects.filter(evento=evento)
         .select_related('usuario')
@@ -247,10 +249,18 @@ def gerenciar_inscricoes(request, slug):
             tem_qr=False,
         )
 
+    if q:
+        inscricoes = inscricoes.filter(
+            Q(usuario__first_name__unaccent__icontains=q) |
+            Q(usuario__last_name__unaccent__icontains=q) |
+            Q(usuario__username__unaccent__icontains=q)
+        )
+
     return render(request, 'eventos/inscricoes.html', {
         'evento': evento,
         'inscricoes': inscricoes,
         'filtro_ativo': filtro,
+        'q': q,
         'MANUAL': constants.MANUAL,
         'INFINITEPAY': constants.INFINITEPAY,
         'PAPEL_DELEGADO': constants.PAPEL_DELEGADO,

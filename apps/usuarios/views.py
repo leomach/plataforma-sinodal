@@ -44,10 +44,10 @@ def gerenciar_usuarios(request):
     
     if query:
         usuarios = usuarios.filter(
-            Q(username__icontains=query) |
-            Q(first_name__icontains=query) |
-            Q(last_name__icontains=query) |
-            Q(email__icontains=query)
+            Q(username__unaccent__icontains=query) |
+            Q(first_name__unaccent__icontains=query) |
+            Q(last_name__unaccent__icontains=query) |
+            Q(email__unaccent__icontains=query)
         )
         
     return render(request, 'usuarios/gerenciar.html', {
