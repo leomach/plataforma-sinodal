@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Count, Q
 from django.conf import settings
 
 from .models import Evento, Inscricao, CampoEvento, RespostaInscricao
@@ -220,7 +220,6 @@ def gerenciar_campos_evento(request, slug):
 @user_passes_test(is_lideranca)
 def gerenciar_inscricoes(request, slug):
     from apps.sessoes.models import CredencialQRCode
-    from django.db.models import Q
     evento = get_object_or_404(Evento, slug=slug)
     filtro = request.GET.get('filtro', '')
     q = request.GET.get('q', '').strip()
@@ -229,6 +228,13 @@ def gerenciar_inscricoes(request, slug):
         .select_related('usuario')
         .annotate(tem_qr=Exists(CredencialQRCode.objects.filter(inscricao=OuterRef('pk'))))
         .order_by('-data_inscricao')
+    )
+
+    # Métricas globais do evento (independentes do filtro/busca aplicados)
+    metricas = Inscricao.objects.filter(evento=evento).aggregate(
+        confirmados=Count('id', filter=Q(status=constants.STATUS_APROVADO)),
+        pendentes=Count('id', filter=Q(status=constants.STATUS_PENDENTE)),
+        rejeitados=Count('id', filter=Q(status=constants.STATUS_REJEITADO)),
     )
 
     if filtro == 'pendente_pagamento':
@@ -261,6 +267,9 @@ def gerenciar_inscricoes(request, slug):
         'inscricoes': inscricoes,
         'filtro_ativo': filtro,
         'q': q,
+        'total_confirmados': metricas['confirmados'],
+        'total_pendentes': metricas['pendentes'],
+        'total_rejeitados': metricas['rejeitados'],
         'MANUAL': constants.MANUAL,
         'INFINITEPAY': constants.INFINITEPAY,
         'PAPEL_DELEGADO': constants.PAPEL_DELEGADO,

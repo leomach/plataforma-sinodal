@@ -101,11 +101,12 @@
                                             {% if field.name == 'bio' %}
                                                 <textarea name="{{ field.html_name }}" id="{{ field.id_for_label }}" rows="4" class="input-field" placeholder="{{ field.field.widget.attrs.placeholder|default:'' }}">{% if field.value %}{{ field.value }}{% endif %}</textarea>
                                             {% else %}
-                                                <input type="{{ field.field.widget.input_type|default:'text' }}" 
-                                                       name="{{ field.html_name }}" 
-                                                       id="{{ field.id_for_label }}" 
-                                                       class="input-field" 
+                                                <input type="{{ field.field.widget.input_type|default:'text' }}"
+                                                       name="{{ field.html_name }}"
+                                                       id="{{ field.id_for_label }}"
+                                                       class="input-field"
                                                        placeholder="{{ field.field.widget.attrs.placeholder|default:'' }}"
+                                                       {% if field.name == 'username' or field.name == 'email' %}autocapitalize="none" autocorrect="off" spellcheck="false"{% endif %}
                                                        {% if field.value %}value="{{ field.value }}"{% endif %}>
                                             {% endif %}
                                         </div>

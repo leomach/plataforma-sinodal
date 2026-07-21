@@ -10,6 +10,20 @@ from .models import User
 from core import constants
 from apps.eventos.models import Inscricao, Evento
 
+def _superusuarios_contato():
+    import re
+    admins = User.objects.filter(is_superuser=True).exclude(whatsapp='').order_by('first_name')
+    return [
+        {
+            'first_name': a.first_name,
+            'last_name': a.last_name,
+            'whatsapp': a.whatsapp,
+            'whatsapp_digitos': re.sub(r'\D', '', a.whatsapp),
+        }
+        for a in admins
+    ]
+
+
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -19,7 +33,19 @@ def register(request):
             return redirect('home')
     else:
         form = CustomUserCreationForm()
-    return render(request, 'usuarios/register.html', {'form': form})
+
+    # Detecta se algum dos erros é de duplicidade para exibir contatos
+    duplicate_codes = {'duplicate_email', 'duplicate_whatsapp'}
+    tem_duplicata = any(
+        any(e.code in duplicate_codes for e in field_errors)
+        for field_errors in form.errors.as_data().values()
+    )
+
+    return render(request, 'usuarios/register.html', {
+        'form': form,
+        'tem_duplicata': tem_duplicata,
+        'admins_contato': _superusuarios_contato() if tem_duplicata else [],
+    })
 
 @login_required
 def home(request):

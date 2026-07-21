@@ -26,10 +26,11 @@
                 <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-text-main block">
                     {{ field.label }}
                 </label>
-                <input type="{{ field.field.widget.input_type|default:'text' }}" 
-                       name="{{ field.html_name }}" 
+                <input type="{{ field.field.widget.input_type|default:'text' }}"
+                       name="{{ field.html_name }}"
                        id="{{ field.id_for_label }}"
                        class="input-field"
+                       {% if field.name == 'username' %}autocapitalize="none" autocorrect="off" spellcheck="false"{% endif %}
                        {% if field.value %}value="{{ field.value }}"{% endif %}>
                 {% if field.errors %}
                     <p class="text-error text-xs font-medium mt-1">{{ field.errors.0 }}</p>
