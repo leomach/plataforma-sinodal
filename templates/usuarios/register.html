@@ -81,6 +81,7 @@
                            name="{{ field.html_name }}"
                            id="{{ field.id_for_label }}"
                            class="input-field {% if field.errors %}border-error focus:border-error focus:ring-error/20{% endif %}"
+                           {% if field.name == 'username' or field.name == 'email' %}autocapitalize="none" autocorrect="off" spellcheck="false"{% endif %}
                            {% if field.value %}value="{{ field.value }}"{% endif %}>
                 {% endif %}
                 {% if field.errors %}
