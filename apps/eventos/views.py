@@ -3,8 +3,10 @@ import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.http import HttpResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.text import slugify
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Count, Q
 from django.conf import settings
@@ -12,6 +14,7 @@ from django.conf import settings
 from .models import Evento, Inscricao, CampoEvento, RespostaInscricao
 from .forms import InscricaoForm, EventoForm, CampoEventoFormSet
 from . import emails
+from . import exportacao
 from .services import infinitepay as ip_service
 from core import constants
 
@@ -270,6 +273,9 @@ def gerenciar_inscricoes(request, slug):
         'total_confirmados': metricas['confirmados'],
         'total_pendentes': metricas['pendentes'],
         'total_rejeitados': metricas['rejeitados'],
+        'colunas_export': exportacao.colunas_disponiveis(evento),
+        'colunas_padrao': exportacao.COLUNAS_PADRAO,
+        'status_choices': constants.STATUS_INSCRICAO_CHOICES,
         'MANUAL': constants.MANUAL,
         'INFINITEPAY': constants.INFINITEPAY,
         'PAPEL_DELEGADO': constants.PAPEL_DELEGADO,
@@ -277,6 +283,44 @@ def gerenciar_inscricoes(request, slug):
         'STATUS_APROVADO': constants.STATUS_APROVADO,
         'STATUS_REJEITADO': constants.STATUS_REJEITADO,
     })
+
+
+@login_required
+@user_passes_test(is_lideranca)
+def exportar_inscricoes(request, slug):
+    """Exporta os inscritos do evento em .xlsx, filtrando por status e com as
+    colunas (e ordem) escolhidas pelo usuário no modal de exportação."""
+    evento = get_object_or_404(Evento, slug=slug)
+
+    status_ids = []
+    for valor in request.GET.getlist('status'):
+        try:
+            status_ids.append(int(valor))
+        except (TypeError, ValueError):
+            continue
+
+    # getlist preserva a ordem de aparição dos checkboxes no formulário — que é
+    # exatamente a ordem definida pelo usuário via drag-and-drop.
+    colunas = request.GET.getlist('colunas')
+
+    inscricoes = (
+        Inscricao.objects.filter(evento=evento)
+        .select_related('usuario')
+        .prefetch_related('respostas__campo')
+        .order_by('usuario__first_name', 'usuario__last_name')
+    )
+    if status_ids:
+        inscricoes = inscricoes.filter(status__in=status_ids)
+
+    conteudo = exportacao.gerar_planilha_bytes(evento, inscricoes, colunas)
+
+    nome_arquivo = f'inscritos_{slugify(evento.titulo) or evento.slug}.xlsx'
+    response = HttpResponse(
+        conteudo,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
+    return response
 
 
 @login_required

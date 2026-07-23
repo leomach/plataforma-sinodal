@@ -21,6 +21,7 @@ requests = "^2.33.1"
 dj-database-url = "^3.1.2"
 segno = "^1.6.1"
 django-anymail = "^15.0"
+openpyxl = "^3.1.5"
 
 [tool.poetry.group.dev.dependencies]
 django-debug-toolbar = "^6.0.0"
