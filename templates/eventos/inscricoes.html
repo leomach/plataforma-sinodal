@@ -14,9 +14,16 @@
                 <h2 class="text-3xl font-bold text-text-main serif-title">Gerenciar Inscrições</h2>
                 <p class="text-text-muted">{{ evento.titulo }}</p>
             </div>
-            <div class="flex-shrink-0 text-left md:text-right bg-surface px-4 py-2 rounded-xl border border-border shadow-sm">
-                <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider">Total de Inscritos</span>
-                <p class="text-2xl font-bold text-primary">{{ inscricoes.count }}</p>
+            <div class="flex items-stretch gap-3 flex-shrink-0">
+                <button type="button" onclick="openExportModal()"
+                        class="btn-primary px-4 py-2 text-sm flex items-center gap-2 whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Exportar
+                </button>
+                <div class="text-left md:text-right bg-surface px-4 py-2 rounded-xl border border-border shadow-sm">
+                    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider">Total de Inscritos</span>
+                    <p class="text-2xl font-bold text-primary">{{ inscricoes.count }}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -359,6 +366,78 @@
     </div>
 </div>
 
+<!-- Modal Exportar Planilha -->
+<div id="export-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-surface w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+        <div class="p-6 border-b border-border flex justify-between items-center bg-primary text-white flex-shrink-0">
+            <div>
+                <h3 class="font-bold text-xl serif-title">Exportar Inscritos</h3>
+                <p class="text-white/70 text-xs mt-0.5">Escolha os status, as colunas e a ordem da planilha (.xlsx)</p>
+            </div>
+            <button type="button" onclick="closeExportModal()" class="text-white/80 hover:text-white text-3xl leading-none">&times;</button>
+        </div>
+
+        <form method="get" action="{% url 'exportar_inscricoes' evento.slug %}" id="export-form"
+              class="flex flex-col overflow-hidden">
+            <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                <!-- Filtro de status -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-text-muted uppercase tracking-[0.2em]">1. Filtrar por status</h4>
+                    <div class="flex flex-wrap gap-2">
+                        {% for valor, rotulo in status_choices %}
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-surface-hover/40 cursor-pointer hover:border-primary/50 transition-all text-sm">
+                            <input type="checkbox" name="status" value="{{ valor }}" checked
+                                   class="rounded border-border text-primary focus:ring-primary">
+                            <span class="font-semibold text-text-main">{{ rotulo }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <p class="text-[11px] text-text-muted italic">Nenhum status marcado = exporta todos.</p>
+                </div>
+
+                <!-- Seleção e ordenação de colunas -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <h4 class="text-xs font-bold text-text-muted uppercase tracking-[0.2em]">2. Colunas e ordem</h4>
+                        <div class="flex gap-2 text-[11px] font-bold">
+                            <button type="button" onclick="toggleAllColumns(true)" class="text-primary hover:underline">Marcar todas</button>
+                            <span class="text-border">|</span>
+                            <button type="button" onclick="toggleAllColumns(false)" class="text-text-muted hover:underline">Desmarcar</button>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-text-muted italic flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" /></svg>
+                        Arraste pelo ícone para reordenar. Só as colunas marcadas entram na planilha.
+                    </p>
+                    <ul id="export-cols" class="space-y-1.5">
+                        {% for chave, rotulo in colunas_export %}
+                        <li class="export-col-item flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-surface-hover/30">
+                            <span class="col-handle cursor-grab text-text-muted hover:text-primary active:cursor-grabbing" title="Arrastar">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zM13 4a1 1 0 100 2 1 1 0 000-2zM13 9a1 1 0 100 2 1 1 0 000-2zM13 14a1 1 0 100 2 1 1 0 000-2z"/></svg>
+                            </span>
+                            <label class="flex items-center gap-2 cursor-pointer flex-grow">
+                                <input type="checkbox" name="colunas" value="{{ chave }}"
+                                       {% if chave in colunas_padrao %}checked{% endif %}
+                                       class="col-check rounded border-border text-primary focus:ring-primary">
+                                <span class="text-sm font-semibold text-text-main">{{ rotulo }}</span>
+                            </label>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-border flex justify-end gap-2 bg-surface-hover flex-shrink-0">
+                <button type="button" onclick="closeExportModal()" class="btn-outline px-6 border-none text-text-muted hover:text-text-main">Cancelar</button>
+                <button type="submit" class="btn-primary px-6 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Baixar planilha
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     let currentRecipient = { name: '', phone: '' };
     const eventTitle = "{{ evento.titulo|escapejs }}";
@@ -419,6 +498,43 @@
             btn.classList.remove('text-primary');
         }
     }
+
+    // --- Exportação ---
+    let exportSortable = null;
+
+    function openExportModal() {
+        document.getElementById('export-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        // Inicializa o drag-and-drop na primeira abertura (SortableJS já carregado)
+        if (!exportSortable && window.Sortable) {
+            exportSortable = Sortable.create(document.getElementById('export-cols'), {
+                handle: '.col-handle',
+                animation: 150,
+                ghostClass: 'opacity-40',
+            });
+        }
+    }
+
+    function closeExportModal() {
+        document.getElementById('export-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function toggleAllColumns(marcar) {
+        document.querySelectorAll('#export-cols .col-check').forEach(cb => { cb.checked = marcar; });
+    }
+
+    // Impede envio sem nenhuma coluna marcada.
+    document.getElementById('export-form').addEventListener('submit', function (e) {
+        const algumaColuna = document.querySelector('#export-cols .col-check:checked');
+        if (!algumaColuna) {
+            e.preventDefault();
+            alert('Selecione ao menos uma coluna para exportar.');
+            return;
+        }
+        // Fecha o modal após disparar o download.
+        setTimeout(closeExportModal, 300);
+    });
 </script>
 
 <style>
@@ -428,5 +544,10 @@
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { @apply bg-transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+    .export-col-item.sortable-chosen { @apply border-primary/60 bg-primary/5 shadow-sm; }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
 {% endblock %}
