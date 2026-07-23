@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     'cloudinary',
     'django_htmx',
+    'anymail',
     'apps.eventos',
     'apps.usuarios',
     'apps.hub',
@@ -104,6 +105,36 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
+# Logging — garante que falhas de envio de e-mail (e outros erros das apps)
+# apareçam no stdout capturado pela Railway.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'apps': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
 # Cloudinary Configuration
 CLOUDINARY_STORAGE = {}
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
@@ -136,13 +167,29 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Email
+#
+# A Railway bloqueia todas as portas SMTP de saída (25/465/587/2525) nos planos
+# Free/Trial/Hobby. Por isso o envio é feito via API HTTP (porta 443) do Resend,
+# usando django-anymail. Em produção defina:
+#   EMAIL_BACKEND=anymail.backends.resend.EmailBackend
+#   RESEND_API_KEY=re_xxx
+# Em desenvolvimento o padrão continua sendo o console.
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@sinodalgaranhuns.com.br')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Credenciais dos provedores suportados pelo Anymail (envio via API HTTP)
+ANYMAIL = {
+    'RESEND_API_KEY': os.getenv('RESEND_API_KEY', ''),
+}
+
+# SMTP legado — só funciona se o provedor liberar a porta (ex.: Railway Pro).
+# Mantido para compatibilidade caso EMAIL_BACKEND aponte para o backend SMTP.
 EMAIL_HOST = os.getenv('EMAIL_HOST', '')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plataformasinodal.com.br')
 
 # InfinitePay
 INFINITEPAY_HANDLE = os.getenv('INFINITEPAY_HANDLE', '')
