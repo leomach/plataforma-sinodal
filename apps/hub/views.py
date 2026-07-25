@@ -25,6 +25,40 @@ def inscricao_aprovada_required(view_func):
         return view_func(request, evento, inscricao, *args, **kwargs)
     return login_required(_wrapped_view)
 
+
+@inscricao_aprovada_required
+def modal_sessao(request, evento, inscricao, sessao_id):
+    """Partial HTMX com informações da sessão + histórico, para os delegados.
+
+    Sem polling: só recarrega quando o participante clica em "Atualizar",
+    evitando sobrecarga com requisições automáticas.
+    """
+    from django.utils import timezone
+
+    from apps.sessoes.models import MembroDaMesa, Sessao
+    from apps.sessoes.services import quorum as quorum_service
+
+    sessao = get_object_or_404(Sessao, pk=sessao_id, evento=evento)
+    logs = sessao.logs.select_related('usuario').order_by('-timestamp')
+    quorum_info = quorum_service.info_quorum(sessao.pk, evento_id=evento.id)
+
+    mesa = list(
+        sessao.membros_mesa
+        .filter(encerrou_em__isnull=True)
+        .select_related('inscricao__usuario')
+        .order_by('cargo')
+    )
+
+    return render(request, 'hub/partials/modal_sessao.html', {
+        'evento': evento,
+        'sessao': sessao,
+        'logs': logs,
+        'quorum': quorum_info,
+        'mesa': mesa,
+        'membros_extras': sessao.membros_extras or [],
+        'atualizado_em': timezone.localtime(timezone.now()),
+    })
+
 @inscricao_aprovada_required
 def hub_evento(request, evento, inscricao):
     # RBAC: Delegados e Ex-Officio podem ver tudo. Outros não vêem documentos restritos.
