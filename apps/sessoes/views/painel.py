@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.eventos.models import Evento
 from apps.sessoes.forms import OperadorPresencaForm, SessaoForm
-from apps.sessoes.models import OperadorPresenca, Sessao, Votacao
+from apps.sessoes.models import MembroDaMesa, OperadorPresenca, Presenca, Sessao, Votacao
 from apps.sessoes.services import eventlog as log_service
 from apps.sessoes.services import quorum as quorum_service
 from core import constants
@@ -60,20 +60,66 @@ def lista_sessoes(request, slug):
     })
 
 
+def _copiar_da_sessao_anterior(sessao_nova, referencia, copiar_presentes, copiar_mesa):
+    """Traz presentes e/ou mesa diretora de uma sessão de referência para a nova."""
+    if copiar_presentes:
+        inscricao_ids = list(
+            Presenca.objects.filter(sessao=referencia, presente=True)
+            .values_list('inscricao_id', flat=True)
+        )
+        if inscricao_ids:
+            Presenca.objects.bulk_create(
+                [Presenca(sessao=sessao_nova, inscricao_id=iid, presente=True) for iid in inscricao_ids],
+                ignore_conflicts=True,
+            )
+            log_service.log_presencas_importadas(
+                sessao_nova, len(inscricao_ids), referencia.nome,
+            )
+
+    if copiar_mesa:
+        membros_ref = list(
+            referencia.membros_mesa.filter(encerrou_em__isnull=True).order_by('cargo')
+        )
+        novos = MembroDaMesa.objects.bulk_create(
+            [MembroDaMesa(sessao=sessao_nova, inscricao_id=m.inscricao_id, cargo=m.cargo)
+             for m in membros_ref]
+        )
+        extras = referencia.membros_extras or []
+        if extras:
+            sessao_nova.membros_extras = extras
+            sessao_nova.save(update_fields=['membros_extras'])
+        if novos or extras:
+            log_service.log_mesa_composta(sessao_nova, novos, extras)
+
+
 @lideranca_required
 def criar_sessao(request, slug):
     evento = get_object_or_404(Evento, slug=slug)
+    # Sessão mais recente do evento — origem para copiar presentes/mesa, se desejado.
+    sessao_referencia = Sessao.objects.filter(evento=evento).order_by('-data_hora').first()
     if request.method == 'POST':
-        form = SessaoForm(request.POST, evento=evento)
+        form = SessaoForm(request.POST, evento=evento, sessao_referencia=sessao_referencia)
         if form.is_valid():
             sessao = form.save(commit=False)
             sessao.evento = evento
             sessao.save()
+            if sessao_referencia:
+                _copiar_da_sessao_anterior(
+                    sessao,
+                    sessao_referencia,
+                    form.cleaned_data.get('copiar_presentes'),
+                    form.cleaned_data.get('copiar_mesa'),
+                )
             messages.success(request, f'Sessão "{sessao.nome}" criada com sucesso.')
             return redirect('painel_sessao', slug=slug, sessao_id=sessao.pk)
     else:
-        form = SessaoForm(evento=evento)
-    return render(request, 'sessoes/form.html', {'evento': evento, 'form': form, 'modo': 'criar'})
+        form = SessaoForm(evento=evento, sessao_referencia=sessao_referencia)
+    return render(request, 'sessoes/form.html', {
+        'evento': evento,
+        'form': form,
+        'modo': 'criar',
+        'sessao_referencia': sessao_referencia,
+    })
 
 
 @lideranca_required
