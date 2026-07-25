@@ -151,6 +151,9 @@ class MesaDiretoraForm(forms.Form):
         for field in self.fields.values():
             if hasattr(field, 'queryset'):
                 field.queryset = qs
+                field.label_from_instance = (
+                    lambda insc: insc.usuario.get_full_name() or insc.usuario.username
+                )
 
 
 class OperadorPresencaForm(forms.Form):
