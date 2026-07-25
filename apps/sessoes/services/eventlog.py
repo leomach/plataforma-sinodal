@@ -97,6 +97,15 @@ def log_saida(sessao, inscricao) -> 'EventoLog':
     )
 
 
+def log_presencas_importadas(sessao, quantidade: int, origem_nome: str) -> 'EventoLog':
+    corpo = _plural(quantidade, 'participante', 'participantes')
+    return _criar_log(
+        sessao,
+        f'Importada a lista de presença da sessão "{origem_nome}": '
+        f'{corpo} registrado(s) como presente(s).',
+    )
+
+
 def log_votacao_aberta(votacao) -> 'EventoLog':
     return _criar_log(
         votacao.sessao,

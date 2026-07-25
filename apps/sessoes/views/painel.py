@@ -63,13 +63,18 @@ def lista_sessoes(request, slug):
 def _copiar_da_sessao_anterior(sessao_nova, referencia, copiar_presentes, copiar_mesa):
     """Traz presentes e/ou mesa diretora de uma sessão de referência para a nova."""
     if copiar_presentes:
-        inscricao_ids = Presenca.objects.filter(
-            sessao=referencia, presente=True,
-        ).values_list('inscricao_id', flat=True)
-        Presenca.objects.bulk_create(
-            [Presenca(sessao=sessao_nova, inscricao_id=iid, presente=True) for iid in inscricao_ids],
-            ignore_conflicts=True,
+        inscricao_ids = list(
+            Presenca.objects.filter(sessao=referencia, presente=True)
+            .values_list('inscricao_id', flat=True)
         )
+        if inscricao_ids:
+            Presenca.objects.bulk_create(
+                [Presenca(sessao=sessao_nova, inscricao_id=iid, presente=True) for iid in inscricao_ids],
+                ignore_conflicts=True,
+            )
+            log_service.log_presencas_importadas(
+                sessao_nova, len(inscricao_ids), referencia.nome,
+            )
 
     if copiar_mesa:
         membros_ref = list(
