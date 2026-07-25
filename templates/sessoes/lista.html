@@ -13,10 +13,16 @@
             </a>
             <h1 class="text-2xl font-bold text-[#0F172A] serif-title">Sessões do Evento</h1>
         </div>
-        <a href="{% url 'criar_sessao' evento.slug %}" class="flex items-center gap-2 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-2.5 px-5 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Nova Sessão
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'gerenciar_operadores' evento.slug %}" class="flex items-center gap-2 bg-white hover:bg-[#F8FAFC] text-[#1D4ED8] border border-[#1D4ED8]/30 font-bold py-2.5 px-5 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z"/></svg>
+                Operadores
+            </a>
+            <a href="{% url 'criar_sessao' evento.slug %}" class="flex items-center gap-2 bg-[#1D4ED8] hover:bg-blue-800 text-white font-bold py-2.5 px-5 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Nova Sessão
+            </a>
+        </div>
     </div>
 
     {% if sessao_ativa %}

@@ -151,6 +151,38 @@ class MesaDiretoraForm(forms.Form):
         for field in self.fields.values():
             if hasattr(field, 'queryset'):
                 field.queryset = qs
+                field.label_from_instance = (
+                    lambda insc: insc.usuario.get_full_name() or insc.usuario.username
+                )
+
+
+class OperadorPresencaForm(forms.Form):
+    inscricao = forms.ModelChoiceField(
+        queryset=None,
+        label='Adicionar operador',
+        empty_label='— Selecione um inscrito aprovado —',
+        widget=forms.Select(attrs=_SELECT_ATTRS),
+    )
+
+    def __init__(self, *args, evento=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.eventos.models import Inscricao
+        from apps.sessoes.models import OperadorPresenca
+        from core import constants
+
+        ja_operadores = OperadorPresenca.objects.filter(
+            inscricao__evento=evento,
+        ).values_list('inscricao_id', flat=True)
+
+        self.fields['inscricao'].queryset = (
+            Inscricao.objects.filter(evento=evento, status=constants.STATUS_APROVADO)
+            .exclude(pk__in=ja_operadores)
+            .select_related('usuario')
+            .order_by('usuario__first_name', 'usuario__last_name')
+        )
+        self.fields['inscricao'].label_from_instance = (
+            lambda insc: f"{insc.usuario.get_full_name() or insc.usuario.username} — {insc.get_papel_evento_display()}"
+        )
 
 
 class TransferirPresidenciaForm(forms.Form):

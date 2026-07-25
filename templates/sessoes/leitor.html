@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <a href="{% url 'painel_sessao' evento.slug sessao.pk %}" class="text-xs text-[#64748B] hover:text-[#1D4ED8] font-bold uppercase tracking-widest flex items-center gap-1 mb-1">
+            <a href="{% if is_lideranca %}{% url 'painel_sessao' evento.slug sessao.pk %}{% else %}{% url 'hub_evento' evento.slug %}{% endif %}" class="text-xs text-[#64748B] hover:text-[#1D4ED8] font-bold uppercase tracking-widest flex items-center gap-1 mb-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 Fechar Leitor
             </a>

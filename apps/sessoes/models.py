@@ -121,6 +121,36 @@ class CredencialQRCode(models.Model):
         verbose_name_plural = _('Credenciais QR Code')
 
 
+class OperadorPresenca(models.Model):
+    """Inscrito autorizado pela liderança a operar o leitor de presença.
+
+    O vínculo é feito pela Inscrição (OneToOne), o que garante que o operador
+    é um inscrito aprovado de um evento específico. O acesso vale para todas as
+    sessões desse evento e pode ser revogado a qualquer momento.
+    """
+
+    inscricao = models.OneToOneField(
+        'eventos.Inscricao',
+        on_delete=models.CASCADE,
+        related_name='operador_presenca',
+    )
+    designado_por = models.ForeignKey(
+        'usuarios.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='operadores_designados',
+    )
+    designado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Operador de presença — {self.inscricao}"
+
+    class Meta:
+        verbose_name = _('Operador de Presença')
+        verbose_name_plural = _('Operadores de Presença')
+
+
 class Presenca(models.Model):
     sessao = models.ForeignKey(
         Sessao,

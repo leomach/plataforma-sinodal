@@ -10,7 +10,7 @@ from apps.eventos.models import Evento, Inscricao
 from apps.sessoes.models import CredencialQRCode, Presenca, Sessao
 from apps.sessoes.services import eventlog as log_service
 from apps.sessoes.services import quorum as quorum_service
-from apps.sessoes.views.painel import is_lideranca, lideranca_required
+from apps.sessoes.views.painel import is_lideranca, lideranca_required, pode_operar_leitor
 from core import constants
 
 
@@ -76,25 +76,29 @@ def toggle_presenca_admin(request, slug, sessao_id):
                   _contexto_lista_presencas(evento, sessao))
 
 
-@lideranca_required
+@login_required
 def leitor_presenca(request, slug, sessao_id):
     evento = get_object_or_404(Evento, slug=slug)
+    if not pode_operar_leitor(request.user, evento):
+        messages.error(request, 'Acesso restrito à liderança ou aos operadores de presença.')
+        return redirect('home')
     sessao = get_object_or_404(Sessao, pk=sessao_id, evento=evento)
     quorum_info = quorum_service.info_quorum(sessao.pk, evento_id=sessao.evento_id)
     return render(request, 'sessoes/leitor.html', {
         'evento': evento,
         'sessao': sessao,
         'quorum': quorum_info,
+        'is_lideranca': is_lideranca(request.user),
     })
 
 
 @require_POST
 @login_required
 def toggle_presenca(request, slug, sessao_id):
-    if not is_lideranca(request.user):
+    evento = get_object_or_404(Evento, slug=slug)
+    if not pode_operar_leitor(request.user, evento):
         return JsonResponse({'ok': False, 'erro': 'Acesso não autorizado.'}, status=403)
 
-    evento = get_object_or_404(Evento, slug=slug)
     sessao = get_object_or_404(Sessao, pk=sessao_id, evento=evento)
 
     if sessao.status not in [Sessao.STATUS_CHAMADA, Sessao.STATUS_ABERTA]:

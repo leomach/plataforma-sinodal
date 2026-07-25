@@ -109,6 +109,8 @@ def hub_evento(request, evento, inscricao):
                 votacao=votacao_ativa, inscricao=inscricao
             ).first()
 
+    from apps.sessoes.views.painel import is_operador_presenca
+
     return render(request, 'hub/index.html', {
         'evento': evento,
         'inscricao': inscricao,
@@ -118,6 +120,7 @@ def hub_evento(request, evento, inscricao):
         'sessao_ativa': sessao_ativa,
         'is_delegado': is_delegado,
         'is_lideranca': is_lideranca(request.user),
+        'is_operador_presenca': is_operador_presenca(request.user, evento),
         'qr_svg': qr_svg,
         'qr_token': qr_token,
         'votacao_ativa': votacao_ativa,
