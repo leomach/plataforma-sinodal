@@ -159,6 +159,21 @@
             </div>
             {% endif %}
 
+            <!-- LEITOR DE PRESENÇA (Operador voluntário — não liderança) -->
+            {% if is_operador_presenca and not is_lideranca %}
+            <div class="bg-[#00703C]/5 border border-[#00703C]/20 rounded-lg p-4">
+                <p class="text-[10px] font-bold text-[#00703C] uppercase tracking-widest mb-3">Operador de Presença</p>
+                {% if sessao_ativa %}
+                <a href="{% url 'leitor_presenca' evento.slug sessao_ativa.pk %}" class="flex items-center justify-center gap-2 w-full bg-[#00703C] hover:bg-green-800 text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-widest transition-all shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4a8 8 0 100 16A8 8 0 0012 4zm0 0v4m0 8v-4m0 0h4m-4 0H8"/></svg>
+                    Leitor de Presença
+                </a>
+                {% else %}
+                <p class="text-xs text-[#64748B]">Nenhuma sessão em chamada ou aberta no momento. O leitor ficará disponível aqui quando uma sessão iniciar.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <!-- QR Code do Delegado -->
             {% if qr_svg %}
             <div class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm p-5">

@@ -10,6 +10,10 @@ urlpatterns = [
     path('sessoes/<int:sessao_id>/editar/', painel.editar_sessao, name='editar_sessao'),
     path('sessoes/<int:sessao_id>/status/', painel.alterar_status, name='alterar_status_sessao'),
 
+    # Operadores de presença (liderança)
+    path('sessoes/operadores/', painel.gerenciar_operadores, name='gerenciar_operadores'),
+    path('sessoes/operadores/<int:operador_id>/remover/', painel.remover_operador, name='remover_operador'),
+
     # Presença
     path('sessoes/<int:sessao_id>/leitor/', presenca.leitor_presenca, name='leitor_presenca'),
     path('sessoes/<int:sessao_id>/presenca/toggle/', presenca.toggle_presenca, name='toggle_presenca'),

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import MembroDaMesa, Sessao, Presenca, CredencialQRCode, Votacao, VotoParticipante, EventoLog
+from .models import MembroDaMesa, Sessao, Presenca, CredencialQRCode, OperadorPresenca, Votacao, VotoParticipante, EventoLog
 
 
 class MembroDaMesaInline(admin.TabularInline):
@@ -32,6 +32,13 @@ class CredencialQRCodeAdmin(admin.ModelAdmin):
     list_filter = ['ativo']
     search_fields = ['inscricao__usuario__username', 'token']
     readonly_fields = ['token', 'gerado_em']
+
+
+@admin.register(OperadorPresenca)
+class OperadorPresencaAdmin(admin.ModelAdmin):
+    list_display = ['inscricao', 'designado_por', 'designado_em']
+    search_fields = ['inscricao__usuario__first_name', 'inscricao__usuario__last_name', 'inscricao__evento__titulo']
+    readonly_fields = ['designado_em']
 
 
 class VotoParticipanteInline(admin.TabularInline):

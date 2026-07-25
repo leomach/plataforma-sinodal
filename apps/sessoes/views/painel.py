@@ -6,8 +6,8 @@ from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.eventos.models import Evento
-from apps.sessoes.forms import SessaoForm
-from apps.sessoes.models import Sessao, Votacao
+from apps.sessoes.forms import OperadorPresencaForm, SessaoForm
+from apps.sessoes.models import OperadorPresenca, Sessao, Votacao
 from apps.sessoes.services import eventlog as log_service
 from apps.sessoes.services import quorum as quorum_service
 from core import constants
@@ -15,6 +15,21 @@ from core import constants
 
 def is_lideranca(user):
     return user.is_superuser or user.tipo == constants.LIDERANCA
+
+
+def is_operador_presenca(user, evento):
+    """Inscrito aprovado designado para operar o leitor de presença do evento."""
+    if not user.is_authenticated:
+        return False
+    return OperadorPresenca.objects.filter(
+        inscricao__evento=evento,
+        inscricao__usuario=user,
+    ).exists()
+
+
+def pode_operar_leitor(user, evento):
+    """Liderança OU operador designado do evento."""
+    return is_lideranca(user) or is_operador_presenca(user, evento)
 
 
 def lideranca_required(view_func):
@@ -193,3 +208,57 @@ def alterar_status(request, slug, sessao_id):
         messages.error(request, 'Ação inválida.')
 
     return redirect('painel_sessao', slug=slug, sessao_id=sessao_id)
+
+
+@lideranca_required
+def gerenciar_operadores(request, slug):
+    """Liderança designa/remove inscritos que podem operar o leitor de presença.
+
+    O acesso concedido vale para todas as sessões do evento e dá ao operador
+    apenas o leitor — nunca o painel, votações, mesa ou logs.
+    """
+    evento = get_object_or_404(Evento, slug=slug)
+
+    if request.method == 'POST':
+        form = OperadorPresencaForm(request.POST, evento=evento)
+        if form.is_valid():
+            inscricao = form.cleaned_data['inscricao']
+            _, created = OperadorPresenca.objects.get_or_create(
+                inscricao=inscricao,
+                defaults={'designado_por': request.user},
+            )
+            nome = inscricao.usuario.get_full_name() or inscricao.usuario.username
+            if created:
+                messages.success(request, f'{nome} agora pode operar o leitor de presença.')
+            else:
+                messages.info(request, f'{nome} já é operador de presença.')
+            return redirect('gerenciar_operadores', slug=slug)
+    else:
+        form = OperadorPresencaForm(evento=evento)
+
+    operadores = (
+        OperadorPresenca.objects.filter(inscricao__evento=evento)
+        .select_related('inscricao__usuario', 'designado_por')
+        .order_by('inscricao__usuario__first_name', 'inscricao__usuario__last_name')
+    )
+
+    return render(request, 'sessoes/operadores.html', {
+        'evento': evento,
+        'form': form,
+        'operadores': operadores,
+    })
+
+
+@lideranca_required
+def remover_operador(request, slug, operador_id):
+    if request.method != 'POST':
+        return redirect('gerenciar_operadores', slug=slug)
+
+    evento = get_object_or_404(Evento, slug=slug)
+    operador = get_object_or_404(
+        OperadorPresenca, pk=operador_id, inscricao__evento=evento,
+    )
+    nome = operador.inscricao.usuario.get_full_name() or operador.inscricao.usuario.username
+    operador.delete()
+    messages.success(request, f'{nome} não é mais operador de presença.')
+    return redirect('gerenciar_operadores', slug=slug)
