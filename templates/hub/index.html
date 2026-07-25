@@ -35,18 +35,34 @@
                 </h3>
                 <div class="space-y-4">
                     {% for sessao in sessoes %}
-                    <div class="flex items-center gap-4 p-4 bg-white border border-[#E2E8F0] rounded-lg shadow-sm">
+                    <div class="flex items-center gap-4 p-4 bg-white border rounded-lg shadow-sm transition-all
+                        {% if sessao.status == 2 or sessao.status == 3 %}border-[#00703C]/40 ring-1 ring-[#00703C]/10{% else %}border-[#E2E8F0]{% endif %}">
                         <div class="flex flex-col items-center justify-center w-14 h-14 bg-[#F1F5F9] rounded-lg border border-[#E2E8F0] shrink-0">
                             <span class="text-[10px] font-bold text-[#1D4ED8] uppercase leading-none">{{ sessao.data_hora|date:"M" }}</span>
                             <span class="text-xl font-bold text-[#0F172A] leading-none mt-1">{{ sessao.data_hora|date:"d" }}</span>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-[#0F172A] serif-title">{{ sessao.nome }}</h4>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="font-bold text-[#0F172A] serif-title">{{ sessao.nome }}</h4>
+                                {% if sessao.status == 2 or sessao.status == 3 %}
+                                <span class="flex items-center gap-1 text-[9px] font-bold text-[#00703C] bg-[#00703C]/10 border border-[#00703C]/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#00703C] animate-pulse"></span> Ao vivo
+                                </span>
+                                {% elif sessao.status == 4 %}
+                                <span class="text-[9px] font-bold text-[#64748B] bg-[#F1F5F9] border border-[#E2E8F0] px-2 py-0.5 rounded-full uppercase tracking-wider">Encerrada</span>
+                                {% endif %}
+                            </div>
                             <p class="text-xs text-[#64748B] flex items-center gap-1 mt-1">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 Às {{ sessao.data_hora|date:"H:i" }}
                             </p>
                         </div>
+                        <button onclick="abrirModalSessao('{% url 'hub_modal_sessao' evento.slug sessao.pk %}')"
+                            class="shrink-0 flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg uppercase tracking-widest transition-all
+                            {% if sessao.status == 2 or sessao.status == 3 %}bg-[#00703C] hover:bg-green-800 text-white shadow-sm{% else %}border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:border-[#CBD5E1]{% endif %}">
+                            {% if sessao.status == 2 or sessao.status == 3 %}Acompanhar{% else %}Detalhes{% endif %}
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
                     </div>
                     {% endfor %}
                 </div>
@@ -244,4 +260,28 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: Detalhes da Sessão (para os participantes) -->
+<div id="modal-sessao-wrapper" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+     onclick="if (event.target === this) this.classList.add('hidden')">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden">
+        <button onclick="document.getElementById('modal-sessao-wrapper').classList.add('hidden')"
+            class="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#0F172A]/25 hover:bg-[#0F172A]/40 text-white transition-colors backdrop-blur-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div id="modal-sessao-content" class="max-h-[88vh] overflow-y-auto">
+            <div class="py-20 text-center text-sm text-[#64748B] italic">Carregando...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirModalSessao(url) {
+    var wrapper = document.getElementById('modal-sessao-wrapper');
+    var content = document.getElementById('modal-sessao-content');
+    content.innerHTML = '<div class="py-20 text-center text-sm text-[#64748B] italic">Carregando...</div>';
+    wrapper.classList.remove('hidden');
+    htmx.ajax('GET', url, { target: '#modal-sessao-content', swap: 'innerHTML' });
+}
+</script>
 {% endblock %}

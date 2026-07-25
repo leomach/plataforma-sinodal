@@ -1,0 +1,122 @@
+{% load tz %}
+<!-- Cabeçalho colorido por status -->
+<div class="relative px-6 pt-7 pb-6 text-white
+    {% if sessao.status == 3 %}bg-[#00703C]
+    {% elif sessao.status == 2 %}bg-[#1D4ED8]
+    {% elif sessao.status == 4 %}bg-[#0F172A]
+    {% else %}bg-[#64748B]{% endif %}">
+    <div class="flex items-center gap-2 mb-3">
+        <span class="w-2 h-2 rounded-full bg-white {% if sessao.status == 2 or sessao.status == 3 %}animate-pulse{% endif %}"></span>
+        <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">
+            {% if sessao.status == 1 %}Em Breve{% elif sessao.status == 2 %}Chamada em Andamento{% elif sessao.status == 3 %}Sessão Aberta{% else %}Sessão Encerrada{% endif %}
+        </span>
+    </div>
+    <h2 class="text-2xl font-bold serif-title leading-tight pr-8">{{ sessao.nome }}</h2>
+    <p class="text-white/80 text-sm mt-1.5 flex items-center gap-2">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        {{ sessao.data_hora|date:"d/m/Y" }} · {{ sessao.data_hora|date:"H:i" }}
+    </p>
+    {% if sessao.is_verificacao_poderes %}
+    <span class="inline-block mt-3 text-[9px] font-bold bg-white/20 border border-white/30 px-2.5 py-1 rounded-full uppercase tracking-wider">Verificação de Poderes</span>
+    {% endif %}
+</div>
+
+<!-- Corpo -->
+<div class="px-6 py-6 space-y-7">
+
+    <!-- Cards de resumo -->
+    <div class="grid grid-cols-2 gap-3">
+        <div class="border border-[#E2E8F0] rounded-xl p-4 bg-[#F8FAFC]">
+            <p class="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-1.5">Quórum</p>
+            <p class="text-2xl font-bold leading-none {% if quorum.atingido %}text-[#00703C]{% else %}text-[#DC2626]{% endif %}">
+                {{ quorum.presentes }}<span class="text-base text-[#94A3B8] font-semibold">/{{ quorum.esperados }}</span>
+            </p>
+            <p class="text-[10px] text-[#64748B] mt-1.5">
+                {% if quorum.atingido %}Quórum atingido{% else %}Sem quórum{% endif %} · {{ quorum.percentual }}%
+            </p>
+        </div>
+        <div class="border border-[#E2E8F0] rounded-xl p-4 bg-[#F8FAFC]">
+            <p class="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-1.5">Registros</p>
+            <p class="text-2xl font-bold leading-none text-[#0F172A]">{{ logs|length }}</p>
+            <p class="text-[10px] text-[#64748B] mt-1.5">acontecimento{{ logs|length|pluralize }}</p>
+        </div>
+    </div>
+
+    <!-- Mesa Diretora -->
+    {% if mesa or membros_extras %}
+    <div>
+        <p class="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-3">Mesa Diretora</p>
+        <div class="space-y-2">
+            {% for m in mesa %}
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-[#1D4ED8]/10 border border-[#1D4ED8]/20 flex items-center justify-center text-xs font-bold text-[#1D4ED8] shrink-0">
+                    {{ m.inscricao.usuario.get_full_name|default:m.inscricao.usuario.username|slice:":1"|upper }}
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-wider">{{ m.cargo_label }}</p>
+                    <p class="text-sm font-semibold text-[#0F172A] truncate">{{ m.inscricao.usuario.get_full_name|default:m.inscricao.usuario.username }}</p>
+                </div>
+                {% if m.cargo == 1 %}
+                <span class="ml-auto text-[9px] font-bold text-[#1D4ED8] bg-[#1D4ED8]/10 border border-[#1D4ED8]/20 px-2 py-0.5 rounded-full uppercase shrink-0">Presidente</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% for e in membros_extras %}
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center text-xs font-bold text-[#64748B] shrink-0">
+                    {{ e.nome|slice:":1"|upper }}
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-wider">{{ e.cargo_descricao }}</p>
+                    <p class="text-sm font-semibold text-[#0F172A] truncate">{{ e.nome }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Histórico de acontecimentos -->
+    <div>
+        <p class="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mb-4">Histórico de Acontecimentos</p>
+        <div class="max-h-[38vh] overflow-y-auto pr-1 -mr-1">
+            {% for log in logs %}
+            <div class="flex gap-3">
+                <div class="flex flex-col items-center">
+                    <div class="w-2.5 h-2.5 rounded-full mt-1 shrink-0 ring-4 ring-white {% if log.tipo == 1 %}bg-[#1D4ED8]{% else %}bg-[#00703C]{% endif %}"></div>
+                    {% if not forloop.last %}<div class="w-0.5 flex-1 bg-[#E2E8F0] my-1"></div>{% endif %}
+                </div>
+                <div class="flex-1 pb-5 -mt-0.5">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-bold text-[#0F172A]">{{ log.timestamp|date:"H:i" }}</span>
+                        <span class="text-[9px] font-bold uppercase tracking-wider {% if log.tipo == 1 %}text-[#1D4ED8]{% else %}text-[#00703C]{% endif %}">
+                            {% if log.tipo == 1 %}Sistema{% else %}Registro{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-sm text-[#334155] leading-snug mt-1">{{ log.descricao }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-10 bg-[#F8FAFC] rounded-xl border border-dashed border-[#E2E8F0]">
+                <p class="text-sm text-[#64748B] italic">Ainda não há registros nesta sessão.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Rodapé: atualização manual (sem polling) -->
+<div class="sticky bottom-0 flex items-center justify-between gap-3 px-6 py-3.5 bg-white/95 backdrop-blur border-t border-[#E2E8F0]">
+    <span class="text-[10px] text-[#94A3B8] flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#94A3B8]"></span>
+        Atualizado às {{ atualizado_em|date:"H:i:s" }}
+    </span>
+    <button
+        hx-get="{% url 'hub_modal_sessao' evento.slug sessao.pk %}"
+        hx-target="#modal-sessao-content"
+        hx-swap="innerHTML"
+        class="flex items-center gap-2 text-xs font-bold text-white bg-[#1D4ED8] hover:bg-blue-800 px-4 py-2.5 rounded-lg uppercase tracking-widest transition-all [&.htmx-request]:opacity-70 [&.htmx-request]:pointer-events-none">
+        <svg class="w-4 h-4 [.htmx-request_&]:animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Atualizar
+    </button>
+</div>
