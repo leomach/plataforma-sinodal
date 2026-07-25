@@ -64,6 +64,38 @@
                         {% endif %}
                     </div>
                 </div>
+
+                {% if form.copiar_presentes or form.copiar_mesa %}
+                <div class="p-4 bg-[#00703C]/5 border border-[#00703C]/20 rounded-lg space-y-3">
+                    <p class="text-[10px] font-bold text-[#00703C] uppercase tracking-widest">
+                        Aproveitar da sessão anterior — {{ sessao_referencia.nome }}
+                    </p>
+                    <div class="flex items-start gap-3">
+                        <input
+                            type="checkbox"
+                            name="{{ form.copiar_presentes.html_name }}"
+                            id="{{ form.copiar_presentes.id_for_label }}"
+                            {% if form.copiar_presentes.value %}checked{% endif %}
+                            class="mt-0.5 w-4 h-4 accent-[#00703C]"
+                        >
+                        <label for="{{ form.copiar_presentes.id_for_label }}" class="text-sm text-[#0F172A] cursor-pointer">
+                            {{ form.copiar_presentes.label }}
+                        </label>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <input
+                            type="checkbox"
+                            name="{{ form.copiar_mesa.html_name }}"
+                            id="{{ form.copiar_mesa.id_for_label }}"
+                            {% if form.copiar_mesa.value %}checked{% endif %}
+                            class="mt-0.5 w-4 h-4 accent-[#00703C]"
+                        >
+                        <label for="{{ form.copiar_mesa.id_for_label }}" class="text-sm text-[#0F172A] cursor-pointer">
+                            {{ form.copiar_mesa.label }}
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
             </div>
 
             <div class="flex gap-3 mt-8">

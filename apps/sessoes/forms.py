@@ -16,6 +16,14 @@ class SessaoForm(forms.ModelForm):
         ),
         input_formats=['%Y-%m-%dT%H:%M', '%d/%m/%Y %H:%M'],
     )
+    copiar_presentes = forms.BooleanField(
+        required=False,
+        label='Trazer os presentes da sessão anterior',
+    )
+    copiar_mesa = forms.BooleanField(
+        required=False,
+        label='Trazer a mesa diretora da sessão anterior',
+    )
 
     class Meta:
         model = Sessao
@@ -28,12 +36,26 @@ class SessaoForm(forms.ModelForm):
             'nome': forms.TextInput(attrs={'class': _INPUT_FIELD, 'placeholder': 'Ex: 1ª Sessão Ordinária'}),
         }
 
-    def __init__(self, *args, evento=None, **kwargs):
+    def __init__(self, *args, evento=None, sessao_referencia=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.evento = evento
+        self.sessao_referencia = sessao_referencia
         if self.instance.pk and self.instance.data_hora:
             local_dt = timezone.localtime(self.instance.data_hora)
             self.fields['data_hora'].initial = local_dt.strftime('%Y-%m-%dT%H:%M')
+
+        # Opções de cópia só fazem sentido ao criar uma nova sessão e quando
+        # existe uma sessão de referência para copiar.
+        if sessao_referencia:
+            self.fields['copiar_presentes'].label = (
+                f'Trazer os presentes de "{sessao_referencia.nome}"'
+            )
+            self.fields['copiar_mesa'].label = (
+                f'Trazer a mesa diretora de "{sessao_referencia.nome}"'
+            )
+        else:
+            self.fields.pop('copiar_presentes', None)
+            self.fields.pop('copiar_mesa', None)
 
     def clean(self):
         cleaned = super().clean()
